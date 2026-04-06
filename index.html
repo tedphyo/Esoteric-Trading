@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -837,19 +836,18 @@ function masterLabel(n) {
   return `M${n}`;
 }
 
-// Universal Year: ordinal 2+0+2+6=10, compound 2+0+26=28
+// Universal Year
+// Ordinal: sum all 4 digits  e.g. 2026 → 2+0+2+6 = 10
+// Compound: first digit + last 2 digits  e.g. 2026 → 2+26 = 28
 function universalYear(year) {
   const digits = String(year).split('').map(Number);
-  const ordRaw = digits.reduce((a,c)=>a+c,0);
+  const ordRaw = digits.reduce((a,c)=>a+c,0);       // 2+0+2+6 = 10
   const ordC = ordinalChain(ordRaw);
-  // Compound: last two digits as number
-  const lastTwo = year % 100;
-  const firstTwo = Math.floor(year / 100);
-  const compRaw = firstTwo + lastTwo; // e.g. 20+26=46? Wait: 2+0+26=28
-  // Per Ted's system: compound = 2+0+26=28
-  const compRaw2 = digits[0]+digits[1]+parseInt(String(year).slice(2));
-  const compC = ordinalChain(compRaw2);
-  return { ordinal: ordC, compound: compC };
+  const y1 = digits[0];                              // first digit: 2
+  const y2 = parseInt(String(year).slice(2));        // last 2 digits: 26
+  const compRaw = y1 + y2;                           // 2+26 = 28
+  const compC = ordinalChain(compRaw);
+  return { ordinal: ordC, compound: compC, ordRaw, compRaw };
 }
 
 // Personal Year for entity: month + day + universal year number
@@ -865,21 +863,22 @@ function personalYear(entityDate, refYear) {
   return { ordinal: ordC, compound: compC };
 }
 
-// Universal Day number
-// Formula: all digits of month + day + full year added together
-// Example: Apr 6 2026 = 4+6+2+0+2+6 = 20 -> chain to final
+// Universal Day — ONLY the day's lifepath (no UY, UM involved)
+// Ordinal: m + d + sum_of_all_year_digits  e.g. 4+6+(2+0+2+6)=4+6+10=20
+// Compound: m + d + first_year_digit + last_2_year_digits  e.g. 4+6+2+26=38
 function universalDay(date) {
   const m = date.getMonth() + 1;
   const d = date.getDate();
   const y = date.getFullYear();
-  // Ordinal: sum ALL individual digits of m + d + yyyy
-  const allDigits = (m + '' + d + '' + y).split('').reduce((a, c) => a + parseInt(c), 0);
-  const ordC = ordinalChain(allDigits);
-  // Compound: m + d + (digit sum of year) -- keeps m and d as whole numbers
-  const yearDigitSum = ('' + y).split('').reduce((a, c) => a + parseInt(c), 0);
-  const compRaw = m + d + yearDigitSum;
-  const compC = ordinalChain(compRaw);
-  return { ordinal: ordC, compound: compC, raw: allDigits };
+  const yDigits = String(y).split('').map(Number);
+  const yAllSum = yDigits.reduce((a,c)=>a+c,0);         // 2+0+2+6 = 10
+  const y1 = yDigits[0];                                  // 2
+  const y2 = parseInt(String(y).slice(2));                // 26
+  const ordRaw = m + d + yAllSum;                         // 4+6+10 = 20
+  const cmpRaw = m + d + y1 + y2;                        // 4+6+2+26 = 38
+  const ordC = ordinalChain(ordRaw);
+  const cmpC = ordinalChain(cmpRaw);
+  return { ordinal: ordC, compound: cmpC, ordRaw, cmpRaw };
 }
 
 // Entity day vibration: entity personal year + universal day
@@ -917,10 +916,11 @@ function entityDayVibration(entityDate, date) {
 //   5 or 22 in either stream → CAUTION/VOLATILE overlay
 
 function universalMonth(calMonth, year) {
-  // Universal Month = month + digit sum of year
-  const yearDigitSum = ('' + year).split('').reduce((a, c) => a + parseInt(c), 0);
-  const raw = calMonth + yearDigitSum;
-  return ordinalChain(raw);
+  // Universal Month: Ord = UY_ordRaw + month, Cmp = UY_cmpRaw + month
+  const uy = universalYear(year);
+  const ordRaw = uy.ordRaw + calMonth;   // e.g. 10+4=14
+  const cmpRaw = uy.compRaw + calMonth;  // e.g. 28+4=32
+  return { ordinal: ordinalChain(ordRaw), compound: ordinalChain(cmpRaw), ordRaw, cmpRaw };
 }
 
 function personalMonth(entityDate, calMonth, year) {
@@ -964,21 +964,23 @@ function computeUniversalScore(date) {
   const uy = universalYear(year);
   const um = universalMonth(calMonth, year);
   const ud = universalDay(date);
-  const score = uy.ordinal.final + um.final + ud.ordinal.final;
+  // Universal score on card = UD ordinal raw (the day's lifepath before reduction)
+  // e.g. Apr 6 2026: 4+6+10 = 20
+  const score = ud.ordRaw;
   return { score, uy, um, ud };
 }
 
 function scoreLabel(score) {
-  if (score >= 35) return 'ELEVATED';
-  if (score >= 25) return 'ACTIVE';
-  if (score >= 12) return 'NEUTRAL';
+  if (score >= 28) return 'ELEVATED';
+  if (score >= 22) return 'ACTIVE';
+  if (score >= 15) return 'NEUTRAL';
   return 'LOW';
 }
 
 function scoreLabelClass(score) {
-  if (score >= 35) return 'elevated';
-  if (score >= 25) return 'active';
-  if (score >= 12) return 'neutral-lbl';
+  if (score >= 28) return 'elevated';
+  if (score >= 22) return 'active';
+  if (score >= 15) return 'neutral-lbl';
   return 'low';
 }
 
@@ -1007,12 +1009,13 @@ function getVerdict(entityScore, univScore, entityData, univData) {
   const univPol   = polarity(univData.ud?.ordinal.final) + polarity(univData.um?.final);
   const aligned   = (entityPol > 0 && univPol > 0) || (entityPol < 0 && univPol < 0);
 
-  if (entityScore >= 35 && univScore >= 25 && absDelta <= 10 && aligned) return 'STRONG RALLY';
+  // univScore is now UD raw (10-33), entityScore is still summed layers (15-55)
+  if (entityScore >= 35 && univScore >= 25 && absDelta <= 15 && aligned) return 'STRONG RALLY';
   if (entityScore >= 28 && univScore >= 20 && aligned) return 'RALLY';
-  if (entityScore >= 30 && univScore < 18) return 'CRASH';
-  if (entityScore < 15 && univScore >= 25) return 'BEAR';
+  if (entityScore >= 28 && univScore < 18) return 'CRASH';
+  if (entityScore < 18 && univScore >= 25) return 'BEAR';
   if (hasVolatile && entityScore >= 25) return 'VOLATILE';
-  if (aligned && absDelta <= 8) return 'NEUTRAL';
+  if (aligned && absDelta <= 12) return 'NEUTRAL';
   if (!aligned && entityScore >= 25) return 'CRASH';
   return 'NEUTRAL';
 }
@@ -1192,27 +1195,24 @@ function renderAll() {
   const pw = entityDate ? personalWeek(entityDate, weekDays[0]) : null;
   const pmData = entityDate ? personalMonth(entityDate, refMonth, refYear) : null;
 
-  // Compute a sample UD for the first day of the selected week to show in header
+  // Show UD lifepath for Monday of the selected week in header
   const sampleUD = universalDay(weekDays[0]);
   document.getElementById('universal-chains').innerHTML = `
-    <div class="chain-item">UY Ord: <span>${uy.ordinal.steps.join('→')}</span></div>
-    <div class="chain-item">UY Cmp: <span>${uy.compound.steps.join('→')}</span></div>
-    <div class="chain-item">UD (Mon): <span>${sampleUD.raw}→${sampleUD.ordinal.steps.slice(1).join('→')||sampleUD.ordinal.final}</span></div>
+    <div class="chain-item">UY Ord: <span>${uy.ordRaw}→${uy.ordinal.steps.join('→')}</span></div>
+    <div class="chain-item">UY Cmp: <span>${uy.compRaw}→${uy.compound.steps.join('→')}</span></div>
+    <div class="chain-item">UM Ord: <span>${um.ordRaw}→${um.ordinal.steps.join('→')}</span></div>
+    <div class="chain-item">UM Cmp: <span>${um.cmpRaw}→${um.compound.steps.join('→')}</span></div>
     ${pyData ? `<div class="chain-item">PY Ord: <span>${pyData.ordinal.steps.join('→')}</span></div>
                 <div class="chain-item">PY Cmp: <span>${pyData.compound.steps.join('→')}</span></div>` : ''}
-    ${pmData ? `<div class="chain-item">PM Ord: <span>${pmData.steps.join('→')}</span></div>` : ''}
     ${pw ? `<div class="chain-item">PW Ord: <span>${pw.ordinal.steps.join('→')}</span></div>
             <div class="chain-item">PW Cmp: <span>${pw.compound.steps.join('→')}</span></div>` : ''}
   `;
 
-  // Personal Week + Personal Month summary bar — updates with selected week
+  // Personal Week summary bar only — no PM
   const pwSummary = document.getElementById('pw-summary');
   if (pw && pyData) {
     const pwOF = pw.ordinal.final, pwCF = pw.compound.final;
     const pwMaster = isMaster(pwOF) || isMaster(pwCF);
-    const pmF = pmData ? pmData.final : null;
-    const pmMaster = pmF && isMaster(pmF);
-
     pwSummary.innerHTML = `
       <div class="pw-summary-item">
         <span>Personal Week</span>
@@ -1226,16 +1226,7 @@ function renderAll() {
         <span>PW Cmp:</span>
         <strong>${pw.compound.steps.join(' → ')}</strong>
       </div>
-      ${pmData ? `
-      <div class="pw-summary-item" style="margin-left: 16px; padding-left: 16px; border-left: 1px solid var(--border);">
-        <span>Personal Month</span>
-        <strong class="${pmMaster?'master-val':''}">${pmF}${pmMaster?'✦':''}</strong>
-      </div>
-      <div class="pw-summary-item">
-        <span>PM chain:</span>
-        <strong>${pmData.steps.join(' → ')}</strong>
-      </div>` : ''}
-      ${pwMaster || pmMaster ? `<div class="pw-summary-item"><span style="color:var(--master2)">✦ Master active — ${[pwOF,pwCF,pmF].filter(v=>v&&isMaster(v)).map(masterLabel).join(' · ')}</span></div>` : ''}
+      ${pwMaster ? `<div class="pw-summary-item"><span style="color:var(--master2)">✦ Master week — ${[pwOF,pwCF].filter(isMaster).map(masterLabel).join(' · ')}</span></div>` : ''}
     `;
     pwSummary.style.display = '';
   } else {
@@ -1266,7 +1257,7 @@ function renderAll() {
     const univLblCls = scoreLabelClass(univScore);
 
     const entPct  = Math.min(Math.round((entityScore / 55) * 100), 100);
-    const univPct = Math.min(Math.round((univScore  / 55) * 100), 100);
+    const univPct = Math.min(Math.round((univScore  / 33) * 100), 100); // UD raw max ~33
     const delta   = entityScore - univScore;
 
     const hasMaster = entData && [entData.py?.ordinal.final, entData.pw?.final,
@@ -1307,8 +1298,8 @@ function renderAll() {
           <div class="stream-lbl ${entLblCls}">${entLbl}</div>
         </div>
         <div class="stream-block">
-          <div class="stream-title">Universal</div>
-          <div class="stream-score univ-score">${univScore}</div>
+          <div class="stream-title">Universal Day</div>
+          <div class="stream-score univ-score">${univScore}<span style="font-size:11px;color:var(--dim);font-weight:400;margin-left:2px">→${univData.ud.ordinal.final}</span></div>
           <div class="score-bar-full"><div class="score-bar-fill univ-fill" style="width:${univPct}%"></div></div>
           <div class="stream-lbl ${univLblCls}">${univLbl}</div>
         </div>
@@ -1332,7 +1323,7 @@ function showDetail(date, ud, entData, univData, pw, pd_data, verdict, entitySco
   const title = document.getElementById('detail-title');
   const chains = document.getElementById('detail-chains');
 
-  title.textContent = `${DAYS_SHORT[date.getDay()]} ${MONTHS[date.getMonth()]} ${date.getDate()} — ${verdict}  |  Entity ${entityScore} vs Universal ${univScore}`;
+  title.textContent = `${DAYS_SHORT[date.getDay()]} ${MONTHS[date.getMonth()]} ${date.getDate()} — ${verdict}  |  Entity ${entityScore} vs Universal Day ${univScore}→${univData.ud.ordinal.final}`;
 
   let html = '';
 
@@ -1354,11 +1345,10 @@ function showDetail(date, ud, entData, univData, pw, pd_data, verdict, entitySco
 
   html += `
     <div class="chain-box">
-      <div class="chain-box-label">Universal Score Breakdown (${univScore})</div>
+      <div class="chain-box-label">Universal Day Lifepath (${univScore}→${univData.ud.ordinal.final})</div>
       <div class="chain-box-value">
-        UY: ${univData.uy.ordinal.steps.join('→')} = <span class="final">${univData.uy.ordinal.final}${isMaster(univData.uy.ordinal.final)?'✦':''}</span><br>
-        UM: ${univData.um.steps.join('→')} = <span class="final">${univData.um.final}${isMaster(univData.um.final)?'✦':''}</span><br>
-        UD (digit sum): ${univData.ud.raw} → ${univData.ud.ordinal.steps.join('→')} = <span class="final">${univData.ud.ordinal.final}${isMaster(univData.ud.ordinal.final)?'✦':''}</span>
+        UD Ord: ${univData.ud.ordRaw} → ${univData.ud.ordinal.steps.join('→')} = <span class="final">${univData.ud.ordinal.final}${isMaster(univData.ud.ordinal.final)?'✦':''}</span><br>
+        UD Cmp: ${univData.ud.cmpRaw} → ${univData.ud.compound.steps.join('→')} = <span class="final">${univData.ud.compound.final}${isMaster(univData.ud.compound.final)?'✦':''}</span>
       </div>
     </div>`;
 
