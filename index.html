@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -865,16 +866,20 @@ function personalYear(entityDate, refYear) {
 }
 
 // Universal Day number
+// Formula: all digits of month + day + full year added together
+// Example: Apr 6 2026 = 4+6+2+0+2+6 = 20 -> chain to final
 function universalDay(date) {
-  const uy = universalYear(date.getFullYear());
-  const m = date.getMonth()+1, d = date.getDate();
-  // Ordinal
-  const ordRaw = m + d + uy.ordinal.final;
-  const ordC = ordinalChain(ordRaw);
-  // Compound
-  const compRaw = m + d + uy.compound.final;
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  const y = date.getFullYear();
+  // Ordinal: sum ALL individual digits of m + d + yyyy
+  const allDigits = (m + '' + d + '' + y).split('').reduce((a, c) => a + parseInt(c), 0);
+  const ordC = ordinalChain(allDigits);
+  // Compound: m + d + (digit sum of year) -- keeps m and d as whole numbers
+  const yearDigitSum = ('' + y).split('').reduce((a, c) => a + parseInt(c), 0);
+  const compRaw = m + d + yearDigitSum;
   const compC = ordinalChain(compRaw);
-  return { ordinal: ordC, compound: compC };
+  return { ordinal: ordC, compound: compC, raw: allDigits };
 }
 
 // Entity day vibration: entity personal year + universal day
@@ -912,8 +917,9 @@ function entityDayVibration(entityDate, date) {
 //   5 or 22 in either stream → CAUTION/VOLATILE overlay
 
 function universalMonth(calMonth, year) {
-  const uy = universalYear(year);
-  const raw = calMonth + uy.ordinal.final;
+  // Universal Month = month + digit sum of year
+  const yearDigitSum = ('' + year).split('').reduce((a, c) => a + parseInt(c), 0);
+  const raw = calMonth + yearDigitSum;
   return ordinalChain(raw);
 }
 
@@ -1186,9 +1192,12 @@ function renderAll() {
   const pw = entityDate ? personalWeek(entityDate, weekDays[0]) : null;
   const pmData = entityDate ? personalMonth(entityDate, refMonth, refYear) : null;
 
+  // Compute a sample UD for the first day of the selected week to show in header
+  const sampleUD = universalDay(weekDays[0]);
   document.getElementById('universal-chains').innerHTML = `
     <div class="chain-item">UY Ord: <span>${uy.ordinal.steps.join('→')}</span></div>
     <div class="chain-item">UY Cmp: <span>${uy.compound.steps.join('→')}</span></div>
+    <div class="chain-item">UD (Mon): <span>${sampleUD.raw}→${sampleUD.ordinal.steps.slice(1).join('→')||sampleUD.ordinal.final}</span></div>
     ${pyData ? `<div class="chain-item">PY Ord: <span>${pyData.ordinal.steps.join('→')}</span></div>
                 <div class="chain-item">PY Cmp: <span>${pyData.compound.steps.join('→')}</span></div>` : ''}
     ${pmData ? `<div class="chain-item">PM Ord: <span>${pmData.steps.join('→')}</span></div>` : ''}
@@ -1349,7 +1358,7 @@ function showDetail(date, ud, entData, univData, pw, pd_data, verdict, entitySco
       <div class="chain-box-value">
         UY: ${univData.uy.ordinal.steps.join('→')} = <span class="final">${univData.uy.ordinal.final}${isMaster(univData.uy.ordinal.final)?'✦':''}</span><br>
         UM: ${univData.um.steps.join('→')} = <span class="final">${univData.um.final}${isMaster(univData.um.final)?'✦':''}</span><br>
-        UD: ${univData.ud.ordinal.steps.join('→')} = <span class="final">${univData.ud.ordinal.final}${isMaster(univData.ud.ordinal.final)?'✦':''}</span>
+        UD (digit sum): ${univData.ud.raw} → ${univData.ud.ordinal.steps.join('→')} = <span class="final">${univData.ud.ordinal.final}${isMaster(univData.ud.ordinal.final)?'✦':''}</span>
       </div>
     </div>`;
 
