@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>This Week's Battlefield</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --surface2: #161b22;
+    --border: #1e2530;
+    --gold: #c9a84c;
+    --gold2: #e8c97a;
+    --red: #e05c5c;
+    --green: #4eca8b;
+    --blue: #4a9eca;
+    --neutral: #7a8a9a;
+    --text: #d4dbe8;
+    --dim: #5a6878;
+    --master: #a78bfa;
+    --master2: #c4b5fd;
+    --rally-glow: rgba(78,202,139,0.12);
+    --bear-glow: rgba(224,92,92,0.12);
+    --neutral-glow: rgba(122,138,154,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  .app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+  }
+
+  .header-left {
+    flex: 0 0 260px;
+  }
+
+  .header-right {
+    flex: 1;
+  }
+
+  .entity-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .entity-label::before {
+    content: '◆';
+    font-size: 8px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px;
+    margin-bottom: 10px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 6px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    color: var(--dim);
+  }
+
+  .tab.active {
+    background: var(--gold);
+    color: #0a0c0f;
+    font-weight: 700;
+  }
+
+  .preset-select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+    margin-bottom: 8px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235a6878' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+
+  .custom-inputs { display: none; }
+  .custom-inputs.visible { display: block; }
+
+  .custom-inputs input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    border-radius: 4px;
+    outline: none;
+    margin-bottom: 6px;
+    transition: border-color 0.2s;
+  }
+
+  .custom-inputs input:focus { border-color: var(--gold); }
+  .custom-inputs input::placeholder { color: var(--dim); }
+
+  .entity-info {
+    padding: 8px 0 0;
+    font-size: 12px;
+  }
+
+  .entity-name-display {
+    color: var(--gold2);
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .entity-date-display {
+    color: var(--dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  /* Title */
+  .battlefield-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 900;
+    color: var(--gold2);
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .battlefield-title span { color: var(--red); }
+
+  .week-range {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+
+  /* Number chains display */
+  .chains-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+
+  .chain-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+  }
+
+  .chain-item span { color: var(--master2); }
+
+  /* Day cards */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  @media (max-width: 700px) {
+    .week-grid { grid-template-columns: repeat(2, 1fr); }
+    .header { flex-direction: column; }
+    .header-left { flex: none; width: 100%; }
+  }
+
+  .day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 12px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .day-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .day-card:nth-child(1) { animation-delay: 0.05s; }
+  .day-card:nth-child(2) { animation-delay: 0.10s; }
+  .day-card:nth-child(3) { animation-delay: 0.15s; }
+  .day-card:nth-child(4) { animation-delay: 0.20s; }
+  .day-card:nth-child(5) { animation-delay: 0.25s; }
+
+  .day-card.rally { border-color: rgba(78,202,139,0.25); background: linear-gradient(135deg, var(--surface), rgba(78,202,139,0.06)); }
+  .day-card.bear  { border-color: rgba(224,92,92,0.25);  background: linear-gradient(135deg, var(--surface), rgba(224,92,92,0.06)); }
+  .day-card.master-day { border-color: rgba(167,139,250,0.3); }
+
+  .day-card.today { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(201,168,76,0.2); }
+  .today-dot {
+    position: absolute; top: 8px; right: 8px;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 6px var(--gold);
+  }
+
+  .day-label-top {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .day-date {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    line-height: 1;
+  }
+
+  .scores-block {
+    margin-bottom: 10px;
+  }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+
+  .score-arrow {
+    font-size: 9px;
+    width: 10px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .score-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .score-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .score-bar.bear-bar  { background: var(--red); }
+  .score-bar.bull-bar  { background: var(--green); }
+
+  .score-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    width: 18px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .score-num.bear-num { color: var(--red); }
+  .score-num.bull-num { color: var(--green); }
+
+  .verdict {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 4px 6px;
+    border-radius: 3px;
+    margin-top: 6px;
+    font-weight: 700;
+  }
+
+  .verdict.RALLY   { background: rgba(78,202,139,0.15); color: var(--green); }
+  .verdict.BEAR    { background: rgba(224,92,92,0.15);  color: var(--red); }
+  .verdict.NEUTRAL { background: rgba(122,138,154,0.1); color: var(--neutral); }
+  .verdict.STRONG-RALLY { background: rgba(78,202,139,0.25); color: var(--green); }
+  .verdict.CAUTION { background: rgba(201,168,76,0.15); color: var(--gold2); }
+
+  .master-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--master2);
+    background: rgba(167,139,250,0.1);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 3px;
+    padding: 2px 5px;
+    text-align: center;
+    margin-top: 4px;
+    letter-spacing: 0.08em;
+  }
+
+  .day-numbers {
+    margin-top: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    line-height: 1.6;
+  }
+
+  .day-numbers .num-highlight { color: var(--gold); }
+
+  /* Detail panel */
+  .detail-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    display: none;
+  }
+
+  .detail-panel.visible { display: block; animation: fadeUp 0.3s ease; }
+
+  .detail-title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--gold2);
+    margin-bottom: 14px;
+    letter-spacing: 0.05em;
+  }
+
+  .chains-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .chain-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 14px;
+  }
+
+  .chain-box-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .chain-box-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.8;
+  }
+
+  .chain-box-value .final {
+    color: var(--master2);
+    font-weight: 700;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .legend-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px; border-radius: 1px;
+  }
+
+  /* Week Navigator */
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .week-nav-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .week-nav-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--dim);
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .week-nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .week-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 28px 6px 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%235a6878' d='M0 0l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    min-width: 220px;
+    letter-spacing: 0.04em;
+  }
+
+  .today-btn {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 5px 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .today-btn:hover { background: var(--gold); color: #0a0c0f; }
+
+  /* Dual-stream scores on card */
+  .dual-scores {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .stream-block {
+    background: var(--surface2);
+    border-radius: 4px;
+    padding: 6px 8px;
+  }
+
+  .stream-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .stream-score {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .stream-score.entity-score { color: var(--gold2); }
+  .stream-score.univ-score   { color: var(--blue); }
+
+  .stream-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 5px;
+    border-radius: 2px;
+    display: inline-block;
+    margin-top: 2px;
+  }
+
+  .stream-lbl.elevated  { background: rgba(201,168,76,0.2);  color: var(--gold2); }
+  .stream-lbl.active    { background: rgba(78,202,139,0.15); color: var(--green); }
+  .stream-lbl.neutral-lbl { background: rgba(74,158,202,0.12); color: var(--blue); }
+  .stream-lbl.low       { background: rgba(122,138,154,0.1); color: var(--dim); }
+
+  .score-bar-full {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .score-bar-fill.entity-fill { background: var(--gold2); }
+  .score-bar-fill.univ-fill   { background: var(--blue); }
+
+  /* Verdict banner */
+  .verdict-banner {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 5px 8px;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .verdict-banner.CRASH        { background: rgba(224,92,92,0.15);   color: var(--red);    border: 1px solid rgba(224,92,92,0.2); }
+  .verdict-banner.BEAR         { background: rgba(224,92,92,0.1);    color: var(--red);    border: 1px solid rgba(224,92,92,0.15);}
+  .verdict-banner.RALLY        { background: rgba(78,202,139,0.15);  color: var(--green);  border: 1px solid rgba(78,202,139,0.2);}
+  .verdict-banner.STRONG-RALLY { background: rgba(78,202,139,0.25);  color: var(--green);  border: 1px solid rgba(78,202,139,0.3);}
+  .verdict-banner.NEUTRAL      { background: rgba(74,158,202,0.1);   color: var(--blue);   border: 1px solid rgba(74,158,202,0.15);}
+  .verdict-banner.VOLATILE     { background: rgba(201,168,76,0.15);  color: var(--gold2);  border: 1px solid rgba(201,168,76,0.2);}
+
+  /* Delta indicator */
+  .delta-row {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .delta-row span { color: var(--text); }
+  .pw-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  .pw-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .pw-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue);
+  }
+
+  .pw-num.master { color: var(--master2); }
+
+  .pd-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold2);
+    margin-left: auto;
+  }
+
+  .pd-num.master { color: var(--master2); }
+
+  /* Personal week summary bar above grid */
+  .pw-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .pw-summary-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pw-summary-item strong {
+    color: var(--text);
+    font-size: 12px;
+  }
+
+  .pw-summary-item .master-val { color: var(--master2); }
+
+  /* Calc watermark */
+  .calc-note {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    text-align: center;
+    margin-top: 24px;
+    letter-spacing: 0.05em;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="entity-label">Entity / Birth Date</div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('preset')">Preset</button>
+        <button class="tab" onclick="switchTab('custom')">Custom</button>
+      </div>
+
+      <div id="preset-section">
+        <select class="preset-select" id="preset-select" onchange="applyPreset()">
+          <option value="SP500|03/04/1957">S&P 500 Index — 03/04/1957</option>
+          <option value="NASDAQ|02/08/1971">NASDAQ — 02/08/1971</option>
+          <option value="DOW|05/26/1896">Dow Jones — 05/26/1896</option>
+          <option value="NYSE|05/17/1792">NYSE — 05/17/1792</option>
+          <option value="BTC|01/03/2009">Bitcoin — 01/03/2009</option>
+          <option value="GOLD|01/01/1975">Gold Futures — 01/01/1975</option>
+          <option value="TED|05/01/1999">Ted Way Aung Phyo — 05/01/1999</option>
+        </select>
+      </div>
+
+      <div id="custom-section" class="custom-inputs">
+        <input type="text" id="custom-name" placeholder="Entity name" oninput="renderAll()">
+        <input type="text" id="custom-date" placeholder="Birth date MM/DD/YYYY" oninput="renderAll()">
+      </div>
+
+      <div class="entity-info">
+        <div class="entity-name-display" id="entity-name-disp">S&P 500 Index</div>
+        <div class="entity-date-display" id="entity-date-disp">03/04/1957</div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="battlefield-title"><span>This Week's</span> Battlefield</div>
+      <div class="week-range" id="week-range"></div>
+      <div class="chains-row" id="universal-chains"></div>
+    </div>
+  </div>
+
+  <!-- Week Navigator -->
+  <div class="week-nav">
+    <div class="week-nav-label">◆ Week</div>
+    <button class="week-nav-btn" onclick="shiftWeek(-1)">‹</button>
+    <select class="week-select" id="week-select" onchange="onWeekSelect()"></select>
+    <button class="week-nav-btn" onclick="shiftWeek(1)">›</button>
+    <button class="today-btn" onclick="goToday()">This Week</button>
+  </div>
+
+  <!-- Personal Week Summary -->
+  <div class="pw-summary" id="pw-summary"></div>
+
+  <!-- Day cards -->
+  <div class="week-grid" id="week-grid"></div>
+
+  <!-- Detail panel (shown on hover/click) -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-title" id="detail-title"></div>
+    <div class="chains-grid" id="detail-chains"></div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-title">Key —</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Rally / Strong Rally</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Crash / Bear</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Neutral</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div> Volatile</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--master)"></div> Master #</div>
+    <div class="legend-item" style="margin-left:auto; color: var(--dim); font-size:9px;">Entity score vs Universal score · Δ = alignment gap</div>
+  </div>
+
+  <div class="calc-note">Ordinal + Compound chains · Entity vibration × Universal Day · Master numbers preserved unreduced</div>
+</div>
+
+<script>
+// ── Numerology Engine ────────────────────────────────────────────────
+
+function digitSum(n) {
+  return String(Math.abs(n)).split('').reduce((a,c)=>a+parseInt(c),0);
+}
+
+// Personal Week: entity birth month + birth day + personal year ordinal/compound
+// Personal Day: personal week + universal day number
+
+function reduceOrdinal(n) {
+  // Reduce step by step, preserve 11,22,33,44
+  while (n > 9 && n !== 11 && n !== 22 && n !== 33 && n !== 44) {
+    n = digitSum(n);
+  }
+  return n;
+}
+
+function ordinalChain(n) {
+  // Returns {steps: [...], final}
+  const steps = [n];
+  while (n > 9 && n !== 11 && n !== 22 && n !== 33 && n !== 44) {
+    n = digitSum(n);
+    steps.push(n);
+  }
+  return { steps, final: n };
+}
+
+function compoundChain(month, day, year) {
+  // Compound: never pre-reduce, add as m+d+yyyy
+  const raw = month + day + year;
+  const steps = [raw];
+  let n = raw;
+  while (n > 9 && n !== 11 && n !== 22 && n !== 33 && n !== 44) {
+    n = digitSum(n);
+    steps.push(n);
+  }
+  return { steps, final: n };
+}
+
+function parseDate(str) {
+  // MM/DD/YYYY
+  const p = str.split('/');
+  if (p.length !== 3) return null;
+  const m = parseInt(p[0]), d = parseInt(p[1]), y = parseInt(p[2]);
+  if (isNaN(m)||isNaN(d)||isNaN(y)) return null;
+  return { m, d, y };
+}
+
+function isMaster(n) {
+  return [11,22,33,44].includes(n);
+}
+
+function masterLabel(n) {
+  return `M${n}`;
+}
+
+// Universal Year: ordinal 2+0+2+6=10, compound 2+0+26=28
+function universalYear(year) {
+  const digits = String(year).split('').map(Number);
+  const ordRaw = digits.reduce((a,c)=>a+c,0);
+  const ordC = ordinalChain(ordRaw);
+  // Compound: last two digits as number
+  const lastTwo = year % 100;
+  const firstTwo = Math.floor(year / 100);
+  const compRaw = firstTwo + lastTwo; // e.g. 20+26=46? Wait: 2+0+26=28
+  // Per Ted's system: compound = 2+0+26=28
+  const compRaw2 = digits[0]+digits[1]+parseInt(String(year).slice(2));
+  const compC = ordinalChain(compRaw2);
+  return { ordinal: ordC, compound: compC };
+}
+
+// Personal Year for entity: month + day + universal year number
+function personalYear(entityDate, refYear) {
+  if (!entityDate) return null;
+  const uy = universalYear(refYear);
+  // Ordinal PY
+  const ordRaw = entityDate.m + entityDate.d + uy.ordinal.final;
+  const ordC = ordinalChain(ordRaw);
+  // Compound PY
+  const compRaw = entityDate.m + entityDate.d + uy.compound.final;
+  const compC = ordinalChain(compRaw);
+  return { ordinal: ordC, compound: compC };
+}
+
+// Universal Day number
+function universalDay(date) {
+  const uy = universalYear(date.getFullYear());
+  const m = date.getMonth()+1, d = date.getDate();
+  // Ordinal
+  const ordRaw = m + d + uy.ordinal.final;
+  const ordC = ordinalChain(ordRaw);
+  // Compound
+  const compRaw = m + d + uy.compound.final;
+  const compC = ordinalChain(compRaw);
+  return { ordinal: ordC, compound: compC };
+}
+
+// Entity day vibration: entity personal year + universal day
+function entityDayVibration(entityDate, date) {
+  if (!entityDate) return null;
+  const py = personalYear(entityDate, date.getFullYear());
+  const ud = universalDay(date);
+  // Combined ordinal
+  const ordRaw = py.ordinal.final + ud.ordinal.final;
+  const ordC = ordinalChain(ordRaw);
+  // Combined compound
+  const compRaw = py.compound.final + ud.compound.final;
+  const compC = ordinalChain(compRaw);
+  return { ordinal: ordC, compound: compC, py, ud };
+}
+
+// ── DUAL-STREAM SCORING ENGINE ────────────────────────────────────────
+// Decoded from Runitup858's "Numerology Market Oracle"
+//
+// ENTITY SCORE = PY + PM + PW + PD + EDV  (all ordinal finals summed; masters count as full value)
+// UNIVERSAL SCORE = UY + UM + UD          (pure calendar stream, no entity)
+//
+// Labels:
+//   ELEVATED  = score >= 30
+//   ACTIVE    = score 20–29
+//   NEUTRAL   = score 10–19
+//   LOW       = score < 10
+//
+// Verdict derived from ALIGNMENT between the two streams:
+//   Both ELEVATED + close delta  → STRONG RALLY
+//   Entity ELEVATED, Univ ACTIVE/ELEVATED, aligned polarity → RALLY
+//   Entity ELEVATED, Univ NEUTRAL/LOW → CRASH (entity fighting market)
+//   Entity LOW, Univ ELEVATED → BEAR (market moving without entity support)
+//   Close scores, both moderate → NEUTRAL
+//   5 or 22 in either stream → CAUTION/VOLATILE overlay
+
+function universalMonth(calMonth, year) {
+  const uy = universalYear(year);
+  const raw = calMonth + uy.ordinal.final;
+  return ordinalChain(raw);
+}
+
+function personalMonth(entityDate, calMonth, year) {
+  if (!entityDate) return null;
+  const py = personalYear(entityDate, year);
+  const raw = py.ordinal.final + calMonth;
+  return ordinalChain(raw);
+}
+
+function computeEntityScore(entityDate, date) {
+  if (!entityDate) return null;
+  const year = date.getFullYear();
+  const calMonth = date.getMonth() + 1;
+
+  const py  = personalYear(entityDate, year);
+  const pm  = personalMonth(entityDate, calMonth, year);
+  const uy  = universalYear(year);
+  const ud  = universalDay(date);
+
+  // PW = entity_m + entity_d + PY_ord
+  const pwRaw = entityDate.m + entityDate.d + py.ordinal.final;
+  const pw = ordinalChain(pwRaw);
+
+  // PD = PW + UD
+  const pdRaw = pw.final + ud.ordinal.final;
+  const pd = ordinalChain(pdRaw);
+
+  // EDV = PY + UD
+  const edvRaw = py.ordinal.final + ud.ordinal.final;
+  const edv = ordinalChain(edvRaw);
+
+  // Entity Score = sum of all finals (masters count as face value)
+  const score = py.ordinal.final + (pm ? pm.final : 0) + pw.final + pd.final + edv.final;
+
+  return { score, py, pm, pw, pd, edv, ud };
+}
+
+function computeUniversalScore(date) {
+  const year = date.getFullYear();
+  const calMonth = date.getMonth() + 1;
+  const uy = universalYear(year);
+  const um = universalMonth(calMonth, year);
+  const ud = universalDay(date);
+  const score = uy.ordinal.final + um.final + ud.ordinal.final;
+  return { score, uy, um, ud };
+}
+
+function scoreLabel(score) {
+  if (score >= 35) return 'ELEVATED';
+  if (score >= 25) return 'ACTIVE';
+  if (score >= 12) return 'NEUTRAL';
+  return 'LOW';
+}
+
+function scoreLabelClass(score) {
+  if (score >= 35) return 'elevated';
+  if (score >= 25) return 'active';
+  if (score >= 12) return 'neutral-lbl';
+  return 'low';
+}
+
+// Polarity: expansion numbers vs contraction
+const EXPAND = [1,3,5,6,9,33];
+const CONTRACT = [2,4,7,8];
+
+function polarity(n) {
+  if (EXPAND.includes(n)) return 1;
+  if (CONTRACT.includes(n)) return -1;
+  if (n === 11 || n === 22 || n === 44) return 0; // master = neutral polarity
+  return 0;
+}
+
+function getVerdict(entityScore, univScore, entityData, univData) {
+  const delta = entityScore - univScore;
+  const absDelta = Math.abs(delta);
+
+  // Check for 5/22 volatility
+  const hasVolatile = [entityData.pd?.final, entityData.ud?.ordinal.final,
+                       univData.ud?.ordinal.final, entityData.pw?.final]
+                       .some(v => v === 5 || v === 22);
+
+  // Polarity alignment: check if entity & universal pull same direction
+  const entityPol = polarity(entityData.py?.ordinal.final) + polarity(entityData.pw?.final);
+  const univPol   = polarity(univData.ud?.ordinal.final) + polarity(univData.um?.final);
+  const aligned   = (entityPol > 0 && univPol > 0) || (entityPol < 0 && univPol < 0);
+
+  if (entityScore >= 35 && univScore >= 25 && absDelta <= 10 && aligned) return 'STRONG RALLY';
+  if (entityScore >= 28 && univScore >= 20 && aligned) return 'RALLY';
+  if (entityScore >= 30 && univScore < 18) return 'CRASH';
+  if (entityScore < 15 && univScore >= 25) return 'BEAR';
+  if (hasVolatile && entityScore >= 25) return 'VOLATILE';
+  if (aligned && absDelta <= 8) return 'NEUTRAL';
+  if (!aligned && entityScore >= 25) return 'CRASH';
+  return 'NEUTRAL';
+}
+
+// ── Presets ──────────────────────────────────────────────────────────
+
+const PRESETS = {
+  'SP500|03/04/1957': { name: 'S&P 500 Index', date: '03/04/1957' },
+  'NASDAQ|02/08/1971': { name: 'NASDAQ', date: '02/08/1971' },
+  'DOW|05/26/1896': { name: 'Dow Jones', date: '05/26/1896' },
+  'NYSE|05/17/1792': { name: 'NYSE', date: '05/17/1792' },
+  'BTC|01/03/2009': { name: 'Bitcoin', date: '01/03/2009' },
+  'GOLD|01/01/1975': { name: 'Gold Futures', date: '01/01/1975' },
+  'TED|05/01/1999': { name: 'Ted Way Aung Phyo', date: '05/01/1999' },
+};
+
+let currentMode = 'preset';
+let currentEntity = { name: 'S&P 500 Index', date: '03/04/1957' };
+
+function switchTab(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('preset-section').style.display = mode === 'preset' ? '' : 'none';
+  const cs = document.getElementById('custom-section');
+  cs.classList.toggle('visible', mode === 'custom');
+  if (mode === 'preset') applyPreset();
+}
+
+function applyPreset() {
+  const val = document.getElementById('preset-select').value;
+  const p = PRESETS[val];
+  if (p) { currentEntity = { name: p.name, date: p.date }; }
+  renderAll();
+}
+
+// ── Week helpers ─────────────────────────────────────────────────────
+
+// currentWeekOffset: 0 = this week, -1 = last week, +1 = next week, etc.
+let currentWeekOffset = 0;
+
+function getMondayOf(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function getWeekDates(offsetWeeks) {
+  const today = new Date();
+  const mon = getMondayOf(today);
+  mon.setDate(mon.getDate() + offsetWeeks * 7);
+  const days = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+
+// Build dropdown options: -12 weeks to +12 weeks
+function buildWeekSelect() {
+  const sel = document.getElementById('week-select');
+  sel.innerHTML = '';
+  const today = new Date();
+  const thisMon = getMondayOf(today);
+
+  for (let w = -12; w <= 12; w++) {
+    const mon = new Date(thisMon);
+    mon.setDate(thisMon.getDate() + w * 7);
+    const fri = new Date(mon);
+    fri.setDate(mon.getDate() + 4);
+
+    const label = w === 0
+      ? `▸ ${fmtDateFull(mon)} — ${fmtDateFull(fri)}  [This Week]`
+      : `${fmtDateFull(mon)} — ${fmtDateFull(fri)}`;
+
+    const opt = document.createElement('option');
+    opt.value = w;
+    opt.textContent = label;
+    if (w === currentWeekOffset) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+function onWeekSelect() {
+  currentWeekOffset = parseInt(document.getElementById('week-select').value);
+  renderAll();
+}
+
+function shiftWeek(dir) {
+  currentWeekOffset += dir;
+  buildWeekSelect();
+  renderAll();
+}
+
+function goToday() {
+  currentWeekOffset = 0;
+  buildWeekSelect();
+  renderAll();
+}
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function fmtDate(d) { return `${MONTHS[d.getMonth()]} ${d.getDate()}`; }
+function fmtDateFull(d) { return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; }
+
+// ── Personal Week & Day ───────────────────────────────────────────────
+
+// Personal Week = entity birth month + birth day + Personal Year (ordinal)
+// Personal Day  = Personal Week + Universal Day number (ordinal)
+// Both shown as ordinal chain, master numbers preserved
+
+function personalWeek(entityDate, weekStartDate) {
+  if (!entityDate) return null;
+  const py = personalYear(entityDate, weekStartDate.getFullYear());
+  // PW ordinal: m + d + PY ordinal
+  const pwOrdRaw = entityDate.m + entityDate.d + py.ordinal.final;
+  const pwOrd = ordinalChain(pwOrdRaw);
+  // PW compound: m + d + PY compound
+  const pwCmpRaw = entityDate.m + entityDate.d + py.compound.final;
+  const pwCmp = ordinalChain(pwCmpRaw);
+  return { ordinal: pwOrd, compound: pwCmp, py };
+}
+
+function personalDay(pw, ud) {
+  if (!pw) return null;
+  // PD ordinal: PW ordinal + UD ordinal
+  const pdOrdRaw = pw.ordinal.final + ud.ordinal.final;
+  const pdOrd = ordinalChain(pdOrdRaw);
+  // PD compound: PW compound + UD compound
+  const pdCmpRaw = pw.compound.final + ud.compound.final;
+  const pdCmp = ordinalChain(pdCmpRaw);
+  return { ordinal: pdOrd, compound: pdCmp };
+}
+
+// ── Render ───────────────────────────────────────────────────────────
+
+function renderAll() {
+  if (currentMode === 'custom') {
+    const name = document.getElementById('custom-name').value.trim() || 'Custom Entity';
+    const date = document.getElementById('custom-date').value.trim();
+    currentEntity = { name, date };
+  }
+
+  document.getElementById('entity-name-disp').textContent = currentEntity.name;
+  document.getElementById('entity-date-disp').textContent = currentEntity.date;
+
+  const entityDate = parseDate(currentEntity.date);
+  const weekDays = getWeekDates(currentWeekOffset);
+  const today = new Date();
+  const refYear = weekDays[0].getFullYear();
+
+  // Title update based on selected week
+  const titleEl = document.querySelector('.battlefield-title');
+  if (currentWeekOffset === 0) {
+    titleEl.innerHTML = `<span>This Week's</span> Battlefield`;
+  } else if (currentWeekOffset < 0) {
+    titleEl.innerHTML = `<span>Past</span> Battlefield`;
+  } else {
+    titleEl.innerHTML = `<span>Future</span> Battlefield`;
+  }
+
+  // Week range label
+  const first = weekDays[0], last = weekDays[4];
+  document.getElementById('week-range').textContent =
+    `${MONTHS[first.getMonth()]} ${first.getDate()} — ${MONTHS[last.getMonth()]} ${last.getDate()}, ${last.getFullYear()}`;
+
+  // Universal year chains — keyed to the SELECTED week's year/month, not today
+  const uy = universalYear(refYear);
+  const refMonth = weekDays[0].getMonth() + 1; // calendar month of the selected week start
+  const um = universalMonth(refMonth, refYear);
+  const pyData = entityDate ? personalYear(entityDate, refYear) : null;
+  const pw = entityDate ? personalWeek(entityDate, weekDays[0]) : null;
+  const pmData = entityDate ? personalMonth(entityDate, refMonth, refYear) : null;
+
+  document.getElementById('universal-chains').innerHTML = `
+    <div class="chain-item">UY Ord: <span>${uy.ordinal.steps.join('→')}</span></div>
+    <div class="chain-item">UY Cmp: <span>${uy.compound.steps.join('→')}</span></div>
+    ${pyData ? `<div class="chain-item">PY Ord: <span>${pyData.ordinal.steps.join('→')}</span></div>
+                <div class="chain-item">PY Cmp: <span>${pyData.compound.steps.join('→')}</span></div>` : ''}
+    ${pmData ? `<div class="chain-item">PM Ord: <span>${pmData.steps.join('→')}</span></div>` : ''}
+    ${pw ? `<div class="chain-item">PW Ord: <span>${pw.ordinal.steps.join('→')}</span></div>
+            <div class="chain-item">PW Cmp: <span>${pw.compound.steps.join('→')}</span></div>` : ''}
+  `;
+
+  // Personal Week + Personal Month summary bar — updates with selected week
+  const pwSummary = document.getElementById('pw-summary');
+  if (pw && pyData) {
+    const pwOF = pw.ordinal.final, pwCF = pw.compound.final;
+    const pwMaster = isMaster(pwOF) || isMaster(pwCF);
+    const pmF = pmData ? pmData.final : null;
+    const pmMaster = pmF && isMaster(pmF);
+
+    pwSummary.innerHTML = `
+      <div class="pw-summary-item">
+        <span>Personal Week</span>
+        <strong class="${pwMaster?'master-val':''}">${pwOF}${pwMaster?'✦':''} / ${pwCF}${isMaster(pwCF)?'✦':''}</strong>
+      </div>
+      <div class="pw-summary-item">
+        <span>PW Ord:</span>
+        <strong>${pw.ordinal.steps.join(' → ')}</strong>
+      </div>
+      <div class="pw-summary-item">
+        <span>PW Cmp:</span>
+        <strong>${pw.compound.steps.join(' → ')}</strong>
+      </div>
+      ${pmData ? `
+      <div class="pw-summary-item" style="margin-left: 16px; padding-left: 16px; border-left: 1px solid var(--border);">
+        <span>Personal Month</span>
+        <strong class="${pmMaster?'master-val':''}">${pmF}${pmMaster?'✦':''}</strong>
+      </div>
+      <div class="pw-summary-item">
+        <span>PM chain:</span>
+        <strong>${pmData.steps.join(' → ')}</strong>
+      </div>` : ''}
+      ${pwMaster || pmMaster ? `<div class="pw-summary-item"><span style="color:var(--master2)">✦ Master active — ${[pwOF,pwCF,pmF].filter(v=>v&&isMaster(v)).map(masterLabel).join(' · ')}</span></div>` : ''}
+    `;
+    pwSummary.style.display = '';
+  } else {
+    pwSummary.style.display = 'none';
+  }
+
+  // Day cards
+  const grid = document.getElementById('week-grid');
+  grid.innerHTML = '';
+
+  weekDays.forEach((date, i) => {
+    const isToday = date.toDateString() === today.toDateString();
+    const ud = universalDay(date);
+    const edv = entityDate ? entityDayVibration(entityDate, date) : null;
+    // Use pw computed above (tied to weekDays[0] year/month — correct for the week)
+    const pd_data = pw ? personalDay(pw, ud) : null;
+
+    // ── Dual-stream scores ──
+    const entData = entityDate ? computeEntityScore(entityDate, date) : null;
+    const univData = computeUniversalScore(date);
+    const entityScore = entData ? entData.score : 0;
+    const univScore   = univData.score;
+    const verdict     = entData ? getVerdict(entityScore, univScore, entData, univData) : 'NEUTRAL';
+
+    const entLbl  = scoreLabel(entityScore);
+    const univLbl = scoreLabel(univScore);
+    const entLblCls  = scoreLabelClass(entityScore);
+    const univLblCls = scoreLabelClass(univScore);
+
+    const entPct  = Math.min(Math.round((entityScore / 55) * 100), 100);
+    const univPct = Math.min(Math.round((univScore  / 55) * 100), 100);
+    const delta   = entityScore - univScore;
+
+    const hasMaster = entData && [entData.py?.ordinal.final, entData.pw?.final,
+                      entData.pd?.final, ud.ordinal.final].some(isMaster);
+
+    const verdictCls = verdict.replace(' ', '-');
+    const cardBg = verdict.includes('RALLY') ? 'rally' : verdict === 'CRASH' || verdict === 'BEAR' ? 'bear' : '';
+    const todayClass = isToday ? 'today' : '';
+    const masterClass = hasMaster ? 'master-day' : '';
+
+    // Personal week/day badge
+    let pdHtml = '';
+    if (pw && pd_data) {
+      const pdOF = pd_data.ordinal.final, pdCF = pd_data.compound.final;
+      const pwOF = pw.ordinal.final, pwCF = pw.compound.final;
+      pdHtml = `
+        <div class="pw-badge">
+          <div class="pw-label">PW</div>
+          <div class="pw-num ${isMaster(pwOF)||isMaster(pwCF)?'master':''}">${pwOF}/${pwCF}</div>
+          <div class="pw-label" style="margin-left:4px">PD</div>
+          <div class="pd-num ${isMaster(pdOF)||isMaster(pdCF)?'master':''}">${pdOF}${isMaster(pdOF)?'✦':''}/${pdCF}${isMaster(pdCF)?'✦':''}</div>
+        </div>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = `day-card ${cardBg} ${masterClass} ${todayClass}`;
+    card.style.animationDelay = `${i * 0.05}s`;
+    card.innerHTML = `
+      ${isToday ? '<div class="today-dot"></div>' : ''}
+      <div class="day-label-top">${DAYS_SHORT[date.getDay()]}</div>
+      <div class="day-date">${fmtDate(date)}</div>
+
+      <div class="dual-scores">
+        <div class="stream-block">
+          <div class="stream-title">Entity</div>
+          <div class="stream-score entity-score">${entityScore}</div>
+          <div class="score-bar-full"><div class="score-bar-fill entity-fill" style="width:${entPct}%"></div></div>
+          <div class="stream-lbl ${entLblCls}">${entLbl}</div>
+        </div>
+        <div class="stream-block">
+          <div class="stream-title">Universal</div>
+          <div class="stream-score univ-score">${univScore}</div>
+          <div class="score-bar-full"><div class="score-bar-fill univ-fill" style="width:${univPct}%"></div></div>
+          <div class="stream-lbl ${univLblCls}">${univLbl}</div>
+        </div>
+      </div>
+
+      <div class="verdict-banner ${verdictCls}">
+        ${verdict === 'CRASH' || verdict === 'BEAR' ? '▼' : verdict.includes('RALLY') ? '▲' : '◆'} ${verdict}
+      </div>
+      ${hasMaster ? `<div class="master-tag">${[entData?.py?.ordinal.final, entData?.pw?.final, ud.ordinal.final].filter(v=>v&&isMaster(v)).map(masterLabel).join(' · ')}</div>` : ''}
+      <div class="delta-row">Δ <span>${delta > 0 ? '+' : ''}${delta}</span></div>
+      ${pdHtml}
+    `;
+
+    card.addEventListener('click', () => showDetail(date, ud, entData, univData, pw, pd_data, verdict, entityScore, univScore));
+    grid.appendChild(card);
+  });
+}
+
+function showDetail(date, ud, entData, univData, pw, pd_data, verdict, entityScore, univScore) {
+  const panel = document.getElementById('detail-panel');
+  const title = document.getElementById('detail-title');
+  const chains = document.getElementById('detail-chains');
+
+  title.textContent = `${DAYS_SHORT[date.getDay()]} ${MONTHS[date.getMonth()]} ${date.getDate()} — ${verdict}  |  Entity ${entityScore} vs Universal ${univScore}`;
+
+  let html = '';
+
+  if (entData) {
+    const pmFinal = entData.pm ? entData.pm.final : '—';
+    html += `
+      <div class="chain-box">
+        <div class="chain-box-label">Entity Score Breakdown (${entityScore})</div>
+        <div class="chain-box-value">
+          PY: ${entData.py.ordinal.steps.join('→')} = <span class="final">${entData.py.ordinal.final}${isMaster(entData.py.ordinal.final)?'✦':''}</span><br>
+          PM: ${entData.pm ? entData.pm.steps.join('→') + ' = ' : '— = '}<span class="final">${entData.pm ? entData.pm.final+(isMaster(entData.pm.final)?'✦':'') : '—'}</span><br>
+          PW: ${entData.pw.steps.join('→')} = <span class="final">${entData.pw.final}${isMaster(entData.pw.final)?'✦':''}</span><br>
+          PD: ${entData.pd.steps.join('→')} = <span class="final">${entData.pd.final}${isMaster(entData.pd.final)?'✦':''}</span><br>
+          EDV: ${entData.edv.steps.join('→')} = <span class="final">${entData.edv.final}${isMaster(entData.edv.final)?'✦':''}</span><br>
+          <span style="color:var(--dim);font-size:10px;">Total: PY+PM+PW+PD+EDV = ${entData.py.ordinal.final}+${entData.pm?entData.pm.final:0}+${entData.pw.final}+${entData.pd.final}+${entData.edv.final} = ${entityScore}</span>
+        </div>
+      </div>`;
+  }
+
+  html += `
+    <div class="chain-box">
+      <div class="chain-box-label">Universal Score Breakdown (${univScore})</div>
+      <div class="chain-box-value">
+        UY: ${univData.uy.ordinal.steps.join('→')} = <span class="final">${univData.uy.ordinal.final}${isMaster(univData.uy.ordinal.final)?'✦':''}</span><br>
+        UM: ${univData.um.steps.join('→')} = <span class="final">${univData.um.final}${isMaster(univData.um.final)?'✦':''}</span><br>
+        UD: ${univData.ud.ordinal.steps.join('→')} = <span class="final">${univData.ud.ordinal.final}${isMaster(univData.ud.ordinal.final)?'✦':''}</span>
+      </div>
+    </div>`;
+
+  if (pw && pd_data) {
+    html += `
+      <div class="chain-box">
+        <div class="chain-box-label">Personal Week · Ord/Cmp</div>
+        <div class="chain-box-value">
+          ${pw.ordinal.steps.join('→')} = <span class="final">${pw.ordinal.final}${isMaster(pw.ordinal.final)?'✦':''}</span><br>
+          ${pw.compound.steps.join('→')} = <span class="final">${pw.compound.final}${isMaster(pw.compound.final)?'✦':''}</span>
+        </div>
+      </div>
+      <div class="chain-box">
+        <div class="chain-box-label">Personal Day · Ord/Cmp</div>
+        <div class="chain-box-value">
+          PW(${pw.ordinal.final})+UD(${ud.ordinal.final})→${pd_data.ordinal.steps.join('→')} = <span class="final">${pd_data.ordinal.final}${isMaster(pd_data.ordinal.final)?'✦':''}</span><br>
+          PW(${pw.compound.final})+UD(${ud.compound.final})→${pd_data.compound.steps.join('→')} = <span class="final">${pd_data.compound.final}${isMaster(pd_data.compound.final)?'✦':''}</span>
+        </div>
+      </div>`;
+  }
+
+  chains.innerHTML = html;
+  panel.classList.add('visible');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────
+buildWeekSelect();
+applyPreset();
+</script>
+</body>
+</html>
