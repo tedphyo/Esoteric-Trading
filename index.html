@@ -690,6 +690,112 @@
 
   .pw-summary-item .master-val { color: var(--master2); }
 
+  /* Notes section */
+  .notes-section {
+    margin-top: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+
+  .notes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .notes-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .notes-title::before { content: '◆'; font-size: 8px; }
+
+  .notes-entity-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+  }
+
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+
+  @media (max-width: 700px) {
+    .notes-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .note-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .note-day-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .note-day-label span { color: var(--text); }
+
+  .note-saved-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+    display: none;
+  }
+
+  .note-saved-dot.visible { display: block; }
+
+  .note-textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    padding: 7px 9px;
+    resize: vertical;
+    min-height: 60px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+
+  .note-textarea::placeholder { color: var(--dim); font-size: 10px; }
+  .note-textarea:focus { border-color: var(--gold); }
+
+  .note-saved-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    color: var(--green);
+    opacity: 0;
+    transition: opacity 0.3s;
+    text-align: right;
+    letter-spacing: 0.05em;
+  }
+
+  .note-saved-label.show { opacity: 1; }
+
   /* Calc watermark */
   .calc-note {
     font-family: 'Space Mono', monospace;
@@ -763,6 +869,16 @@
   <div class="detail-panel" id="detail-panel">
     <div class="detail-title" id="detail-title"></div>
     <div class="chains-grid" id="detail-chains"></div>
+  </div>
+
+
+  <!-- Notes Section -->
+  <div class="notes-section" id="notes-section">
+    <div class="notes-header">
+      <div class="notes-title">Daily Notes</div>
+      <div class="notes-entity-label" id="notes-entity-label"></div>
+    </div>
+    <div class="notes-grid" id="notes-grid"></div>
   </div>
 
   <!-- Legend -->
@@ -1316,6 +1432,9 @@ function renderAll() {
     card.addEventListener('click', () => showDetail(date, ud, entData, univData, pw, pd_data, verdict, entityScore, univScore));
     grid.appendChild(card);
   });
+
+  // Render notes for this entity + week
+  renderNotes(currentEntity.name, weekDays);
 }
 
 function showDetail(date, ud, entData, univData, pw, pd_data, verdict, entityScore, univScore) {
@@ -1373,6 +1492,71 @@ function showDetail(date, ud, entData, univData, pw, pd_data, verdict, entitySco
   chains.innerHTML = html;
   panel.classList.add('visible');
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+
+// ── Notes System ─────────────────────────────────────────────────────
+
+function noteKey(entityName, date) {
+  const d = date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate();
+  return 'note|' + entityName.replace(/[^a-zA-Z0-9]/g,'_') + '|' + d;
+}
+
+function loadNote(entityName, date) {
+  try { return localStorage.getItem(noteKey(entityName, date)) || ''; }
+  catch(e) { return ''; }
+}
+
+function saveNote(entityName, date, text) {
+  try { localStorage.setItem(noteKey(entityName, date), text); }
+  catch(e) {}
+}
+
+function renderNotes(entityName, weekDays) {
+  document.getElementById('notes-entity-label').textContent = entityName;
+  const grid = document.getElementById('notes-grid');
+  grid.innerHTML = '';
+
+  weekDays.forEach(date => {
+    const dayLabel = DAYS_SHORT[date.getDay()];
+    const dateStr = fmtDate(date);
+    const savedText = loadNote(entityName, date);
+
+    const card = document.createElement('div');
+    card.className = 'note-card';
+
+    const labelRow = document.createElement('div');
+    labelRow.className = 'note-day-label';
+    labelRow.innerHTML = `<span>${dayLabel} ${dateStr}</span><div class="note-saved-dot ${savedText ? 'visible' : ''}" id="dot-${dateStr.replace(' ','-')}"></div>`;
+
+    const ta = document.createElement('textarea');
+    ta.className = 'note-textarea';
+    ta.placeholder = 'What happened? Price action, confluence notes...';
+    ta.value = savedText;
+    ta.dataset.date = dateStr;
+
+    const savedLbl = document.createElement('div');
+    savedLbl.className = 'note-saved-label';
+    savedLbl.textContent = '✓ saved';
+
+    let saveTimer;
+    ta.addEventListener('input', () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        saveNote(entityName, date, ta.value);
+        savedLbl.classList.add('show');
+        const dot = card.querySelector('.note-saved-dot');
+        if (ta.value.trim()) dot.classList.add('visible');
+        else dot.classList.remove('visible');
+        setTimeout(() => savedLbl.classList.remove('show'), 1500);
+      }, 600);
+    });
+
+    card.appendChild(labelRow);
+    card.appendChild(ta);
+    card.appendChild(savedLbl);
+    grid.appendChild(card);
+  });
 }
 
 // ── Init ─────────────────────────────────────────────────────────────
