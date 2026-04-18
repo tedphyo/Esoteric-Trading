@@ -1048,6 +1048,175 @@
     letter-spacing: 0.05em;
     opacity: 0.5;
   }
+
+  /* Market Intel Panel */
+  .intel-panel { background:var(--surface); border:1px solid var(--border); border-radius:8px; margin-bottom:16px; overflow:hidden; }
+  .intel-header { display:flex; align-items:center; justify-content:space-between; padding:11px 18px; cursor:pointer; user-select:none; border-bottom:1px solid var(--border); }
+  .intel-header:hover { background:rgba(255,255,255,0.02); }
+  .intel-title { font-family:"Space Mono",monospace; font-size:10px; letter-spacing:0.15em; color:var(--gold); text-transform:uppercase; }
+  .intel-title::before { content:"◆ "; font-size:8px; }
+  .intel-dot { width:6px; height:6px; border-radius:50%; background:var(--dim); margin-left:8px; display:inline-block; transition:background 0.3s; }
+  .intel-dot.live { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .intel-dot.loading { background:var(--gold); animation:blink 1s infinite; }
+  .intel-dot.error { background:var(--red); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .intel-toggle { font-family:"Space Mono",monospace; font-size:9px; color:var(--dim); }
+  .intel-body { padding:14px 18px; display:none; }
+  .intel-body.open { display:block; animation:fadeUp 0.2s ease; }
+  .intel-cols { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:14px; }
+  @media (max-width:700px) { .intel-cols { grid-template-columns:1fr; } }
+  .intel-col { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:12px 14px; }
+  .intel-col-label { font-family:"Space Mono",monospace; font-size:8px; letter-spacing:0.12em; color:var(--dim); text-transform:uppercase; margin-bottom:10px; }
+  .intel-col-label::before { content:"▸ "; color:var(--gold); }
+  .ticker-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid rgba(30,37,48,0.6); }
+  .ticker-row:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .ticker-name { font-family:"Space Mono",monospace; font-size:10px; color:var(--dim); min-width:36px; }
+  .ticker-price { font-family:"Space Mono",monospace; font-size:12px; font-weight:700; color:var(--text); }
+  .ticker-sub { font-family:"Space Mono",monospace; font-size:8px; color:var(--dim); }
+  .ticker-chg { font-family:"Space Mono",monospace; font-size:9px; padding:1px 5px; border-radius:2px; font-weight:700; }
+  .ticker-chg.up { color:var(--green); background:rgba(78,202,139,0.12); }
+  .ticker-chg.down { color:var(--red); background:rgba(224,92,92,0.12); }
+  .ticker-chg.flat { color:var(--dim); background:rgba(122,138,154,0.1); }
+  .vix-meter { margin-top:8px; padding-top:8px; border-top:1px solid var(--border); }
+  .vix-row { display:flex; justify-content:space-between; font-family:"Space Mono",monospace; font-size:8px; color:var(--dim); margin-bottom:3px; }
+  .vix-track { height:4px; border-radius:2px; position:relative; background:linear-gradient(to right,var(--green),var(--gold2),var(--red)); }
+  .vix-needle { position:absolute; top:-3px; width:2px; height:10px; background:#fff; border-radius:1px; transform:translateX(-50%); transition:left 0.5s ease; }
+  .price-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .price-lbl { font-family:"Space Mono",monospace; font-size:9px; color:var(--dim); min-width:38px; text-transform:uppercase; }
+  .price-field { flex:1; background:var(--surface); border:1px solid var(--border); color:var(--text); padding:5px 8px; font-family:"Space Mono",monospace; font-size:11px; border-radius:3px; outline:none; transition:border-color 0.2s; }
+  .price-field:focus { border-color:var(--gold); }
+  .price-field::placeholder { color:var(--dim); font-size:10px; }
+  .price-result { font-family:"Space Mono",monospace; font-size:9px; min-width:80px; text-align:right; }
+  .price-summary { margin-top:8px; padding-top:8px; border-top:1px solid var(--border); font-family:"Space Mono",monospace; font-size:9px; }
+  .struct-badge { font-family:"Space Mono",monospace; font-size:11px; font-weight:700; letter-spacing:0.1em; text-align:center; padding:6px; border-radius:4px; margin-bottom:6px; }
+  .struct-UP   { background:rgba(78,202,139,0.15);  color:var(--green); border:1px solid rgba(78,202,139,0.25); }
+  .struct-DOWN { background:rgba(224,92,92,0.15);   color:var(--red);   border:1px solid rgba(224,92,92,0.25); }
+  .struct-RANGE{ background:rgba(74,158,202,0.12);  color:var(--blue);  border:1px solid rgba(74,158,202,0.2); }
+  .struct-REV  { background:rgba(201,168,76,0.15);  color:var(--gold2); border:1px solid rgba(201,168,76,0.25); }
+  .struct-LOAD { background:rgba(122,138,154,0.1);  color:var(--dim);   border:1px solid var(--border); }
+  .struct-hhll { font-family:"Space Mono",monospace; font-size:8px; color:var(--dim); display:flex; flex-direction:column; gap:4px; }
+  .hl-up { color:var(--green); font-weight:700; }
+  .hl-dn { color:var(--red);   font-weight:700; }
+  .conf-bar { margin-top:12px; padding:10px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:5px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .conf-lbl { font-family:"Space Mono",monospace; font-size:8px; color:var(--dim); text-transform:uppercase; flex-shrink:0; }
+  .conf-track { flex:1; height:8px; background:var(--border); border-radius:4px; position:relative; min-width:80px; }
+  .conf-fill  { position:absolute; top:0; height:100%; border-radius:4px; transition:all 0.4s ease; }
+  .conf-score { font-family:"Space Mono",monospace; font-size:14px; font-weight:700; min-width:36px; text-align:right; }
+  .conf-verdict { font-family:"Space Mono",monospace; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; font-weight:700; padding:2px 7px; border-radius:3px; }
+
+  /* Runitup858 Signal Badges */
+  .signal-badge {
+    font-family: "Space Mono", monospace;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 5px 8px; border-radius: 3px;
+    text-align: center; margin-bottom: 4px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .signal-7    { background: rgba(224,92,92,0.15);   color: var(--red);    border: 1px solid rgba(224,92,92,0.3); }
+  .signal-11   { background: rgba(167,139,250,0.15); color: var(--master2);border: 1px solid rgba(167,139,250,0.3); }
+  .signal-28   { background: rgba(201,168,76,0.15);  color: var(--gold2);  border: 1px solid rgba(201,168,76,0.3); }
+  .signal-none { display: none; }
+  .signal-hint {
+    font-family: "Space Mono", monospace;
+    font-size: 8px; color: var(--dim);
+    text-align: center; letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  /* Price Harmony Section */
+  .price-harmony {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .price-harmony-title {
+    font-family: "Space Mono", monospace;
+    font-size: 9px; letter-spacing: 0.15em;
+    color: var(--gold); text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .price-harmony-title::before { content: "◆ "; font-size: 8px; }
+  .ph-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .ph-col-label {
+    font-family: "Space Mono", monospace;
+    font-size: 8px; letter-spacing: 0.1em;
+    color: var(--dim); text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .ph-input-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
+  }
+  .ph-lbl {
+    font-family: "Space Mono", monospace;
+    font-size: 8px; color: var(--dim);
+    min-width: 32px; text-transform: uppercase;
+  }
+  .ph-field {
+    flex: 1; background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text); padding: 4px 7px;
+    font-family: "Space Mono", monospace;
+    font-size: 10px; border-radius: 3px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .ph-field:focus { border-color: var(--gold); }
+  .ph-field::placeholder { color: var(--dim); font-size: 9px; }
+  .ph-result {
+    font-family: "Space Mono", monospace;
+    font-size: 9px; min-width: 70px; text-align: right;
+  }
+  .ph-match { color: var(--green); font-weight: 700; }
+  .ph-nomatch { color: var(--dim); }
+  .ph-summary {
+    font-family: "Space Mono", monospace;
+    font-size: 9px; margin-top: 8px;
+    padding-top: 8px; border-top: 1px solid var(--border);
+    letter-spacing: 0.04em;
+  }
+  .ph-signal { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .ph-signal-row {
+    font-family: "Space Mono", monospace;
+    font-size: 9px; color: var(--dim);
+    display: flex; justify-content: space-between;
+    margin-bottom: 4px; letter-spacing: 0.04em;
+  }
+  .ph-signal-row span { color: var(--text); }
+  .ph-gann-note {
+    font-family: "Space Mono", monospace;
+    font-size: 8px; color: var(--dim);
+    margin-top: 6px; letter-spacing: 0.04em;
+    font-style: italic;
+  }
+
+  /* Backtest date range inputs */
+  .bt-date-range {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .bt-date-lbl {
+    font-family: "Space Mono", monospace;
+    font-size: 9px; color: var(--dim); letter-spacing: 0.08em;
+    text-transform: uppercase; flex-shrink: 0;
+  }
+  .bt-date-input {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 5px 9px;
+    font-family: "Space Mono", monospace; font-size: 11px;
+    border-radius: 4px; outline: none; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .bt-date-input:focus { border-color: var(--gold); }
+  .bt-date-sep {
+    font-family: "Space Mono", monospace;
+    font-size: 10px; color: var(--dim);
+  }
 </style>
 </head>
 <body>
@@ -1077,7 +1246,6 @@
           <option value="NYSE|05/17/1792">NYSE — 05/17/1792</option>
           <option value="BTC|01/03/2009">Bitcoin — 01/03/2009</option>
           <option value="GOLD|01/01/1975">Gold Futures — 01/01/1975</option>
-          <option value="TED|05/01/1999">Ted Way Aung Phyo — 05/01/1999</option>
         </select>
       </div>
 
@@ -1111,6 +1279,76 @@
   <!-- Personal Week Summary -->
   <div class="pw-summary" id="pw-summary"></div>
 
+
+  <!-- Market Intel Panel -->
+  <div class="intel-panel" id="intel-panel">
+    <div class="intel-header" onclick="toggleIntel()">
+      <div style="display:flex;align-items:center">
+        <div class="intel-title">Market Intel</div>
+        <span class="intel-dot loading" id="intel-dot"></span>
+      </div>
+      <div class="intel-toggle" id="intel-toggle">▾ EXPAND</div>
+    </div>
+    <div class="intel-body" id="intel-body">
+      <div class="intel-cols">
+
+        <!-- Col 1: Live Data -->
+        <div class="intel-col">
+          <div class="intel-col-label">Live Market Data</div>
+          <div class="ticker-row">
+            <div class="ticker-name">SPY</div>
+            <div><div class="ticker-price" id="spy-price">—</div><div class="ticker-sub" id="spy-vol">vol: —</div></div>
+            <div class="ticker-chg flat" id="spy-chg">—</div>
+          </div>
+          <div class="ticker-row">
+            <div class="ticker-name">QQQ</div>
+            <div><div class="ticker-price" id="qqq-price">—</div></div>
+            <div class="ticker-chg flat" id="qqq-chg">—</div>
+          </div>
+          <div class="ticker-row">
+            <div class="ticker-name">VIX</div>
+            <div><div class="ticker-price" id="vix-price">—</div><div class="ticker-sub" id="vix-lbl">—</div></div>
+            <div class="ticker-chg flat" id="vix-chg">—</div>
+          </div>
+          <div class="ticker-row">
+            <div class="ticker-name">DXY</div>
+            <div><div class="ticker-price" id="dxy-price">—</div></div>
+            <div class="ticker-chg flat" id="dxy-chg">—</div>
+          </div>
+          <div class="vix-meter">
+            <div class="vix-row"><span>CALM</span><span>ELEVATED</span><span>FEAR</span></div>
+            <div class="vix-track"><div class="vix-needle" id="vix-needle" style="left:50%"></div></div>
+          </div>
+        </div>
+
+        <!-- Col 2: Price Numerology -->
+        <div class="intel-col">
+          <div class="intel-col-label">Price Numerology · <span id="ud-display" style="color:var(--gold)">UD=?</span></div>
+          <div class="price-row"><div class="price-lbl">HIGH</div><input class="price-field" id="price-high" placeholder="e.g. 6651.25" oninput="calcPriceNumer()"><div class="price-result" id="res-high" style="color:var(--dim)">—</div></div>
+          <div class="price-row"><div class="price-lbl">LOW</div><input class="price-field" id="price-low" placeholder="e.g. 6601.10" oninput="calcPriceNumer()"><div class="price-result" id="res-low" style="color:var(--dim)">—</div></div>
+          <div class="price-row"><div class="price-lbl">CLOSE</div><input class="price-field" id="price-close" placeholder="e.g. 6630.50" oninput="calcPriceNumer()"><div class="price-result" id="res-close" style="color:var(--dim)">—</div></div>
+          <div class="price-row"><div class="price-lbl">OPEN</div><input class="price-field" id="price-open" placeholder="e.g. 6615.00" oninput="calcPriceNumer()"><div class="price-result" id="res-open" style="color:var(--dim)">—</div></div>
+          <div class="price-summary" id="price-summary" style="color:var(--dim)">Enter prices to check confluence</div>
+        </div>
+
+        <!-- Col 3: Market Structure -->
+        <div class="intel-col">
+          <div class="intel-col-label">Market Structure · SPY 10d</div>
+          <div class="struct-badge struct-LOAD" id="struct-badge">LOADING...</div>
+          <div class="struct-hhll" id="struct-hhll"></div>
+        </div>
+
+      </div>
+      <!-- Confluence Bar -->
+      <div class="conf-bar">
+        <div class="conf-lbl">Confluence</div>
+        <div class="conf-track"><div class="conf-fill" id="conf-fill" style="width:0%;left:50%;background:var(--dim)"></div></div>
+        <div class="conf-score" id="conf-score" style="color:var(--dim)">0.0</div>
+        <div class="conf-verdict" id="conf-verdict" style="background:rgba(122,138,154,0.1);color:var(--dim)">NEUTRAL</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Day cards -->
   <div class="week-grid" id="week-grid"></div>
 
@@ -1118,6 +1356,29 @@
   <div class="detail-panel" id="detail-panel">
     <div class="detail-title" id="detail-title"></div>
     <div class="chains-grid" id="detail-chains"></div>
+    <div class="price-harmony" id="price-harmony" style="display:none">
+      <div class="price-harmony-title">Price Level Numerology · Gann Method</div>
+      <div class="ph-grid">
+        <div>
+          <div class="ph-col-label">Enter Today's OHLC</div>
+          <div class="ph-input-row"><div class="ph-lbl">HIGH</div><input class="ph-field" id="ph-high" placeholder="e.g. 5651.25" oninput="calcPriceHarmony()"><div class="ph-result" id="ph-res-high">—</div></div>
+          <div class="ph-input-row"><div class="ph-lbl">LOW</div><input class="ph-field" id="ph-low" placeholder="e.g. 5601.10" oninput="calcPriceHarmony()"><div class="ph-result" id="ph-res-low">—</div></div>
+          <div class="ph-input-row"><div class="ph-lbl">CLOSE</div><input class="ph-field" id="ph-close" placeholder="e.g. 5630.50" oninput="calcPriceHarmony()"><div class="ph-result" id="ph-res-close">—</div></div>
+          <div class="ph-input-row"><div class="ph-lbl">OPEN</div><input class="ph-field" id="ph-open" placeholder="e.g. 5615.00" oninput="calcPriceHarmony()"><div class="ph-result" id="ph-res-open">—</div></div>
+        </div>
+        <div>
+          <div class="ph-col-label">Vibration Context</div>
+          <div class="ph-signal" id="ph-signal">
+            <div class="ph-signal-row">UD Ordinal: <span id="ph-ud-ord">—</span></div>
+            <div class="ph-signal-row">UD Compound: <span id="ph-ud-cmp">—</span></div>
+            <div class="ph-signal-row">Personal Day: <span id="ph-pd">—</span></div>
+            <div class="ph-signal-row">Runitup Signal: <span id="ph-sig">—</span></div>
+            <div class="ph-gann-note" id="ph-gann-note"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ph-summary" id="ph-summary" style="color:var(--dim)">Enter prices to check harmonic alignment with the day's vibration numbers</div>
+    </div>
   </div>
 
 
@@ -1162,7 +1423,6 @@
           <option value="DOW|05/26/1896">Dow Jones</option>
           <option value="BTC|01/03/2009">Bitcoin</option>
           <option value="GOLD|01/01/1975">Gold</option>
-          <option value="TED|05/01/1999">Ted Way Aung Phyo</option>
         </select>
       </div>
     </div>
@@ -1175,15 +1435,21 @@
 
     <!-- Backtest Section -->
     <div class="backtest-header">
-      <div class="backtest-title">Backtest — Feb to Apr 2026 · Learned UD Method</div>
+      <div class="backtest-title">Backtest Range</div>
       <select class="backtest-entity-sel" id="bt-entity-sel">
         <option value="SP500|03/04/1957">S&P 500</option>
         <option value="NASDAQ|02/08/1971">NASDAQ</option>
         <option value="DOW|05/26/1896">Dow Jones</option>
         <option value="BTC|01/03/2009">Bitcoin</option>
         <option value="GOLD|01/01/1975">Gold</option>
-        <option value="TED|05/01/1999">Ted Way Aung Phyo</option>
       </select>
+      <div class="bt-date-range">
+        <div class="bt-date-lbl">From</div>
+        <input type="date" class="bt-date-input" id="bt-start-date">
+        <div class="bt-date-sep">→</div>
+        <div class="bt-date-lbl">To</div>
+        <input type="date" class="bt-date-input" id="bt-end-date">
+      </div>
       <button class="backtest-run-btn" onclick="runBacktest()">Run Backtest</button>
     </div>
     <div id="backtest-results"></div>
@@ -1402,11 +1668,6 @@ const LEARNED_MAPS = {
     6:{up:4,down:1}, 7:{up:3,down:3}, 8:{up:2,down:3}, 9:{up:1,down:3},
     11:{up:3,down:1}, 22:{up:0,down:2}
   },
-  'TED|05/01/1999': {
-    1:{up:2,down:1}, 3:{up:3,down:2}, 4:{up:2,down:1}, 5:{up:2,down:3},
-    6:{up:4,down:1}, 7:{up:3,down:3}, 8:{up:2,down:3}, 9:{up:1,down:3},
-    11:{up:3,down:1}, 22:{up:0,down:2}
-  }
 };
 
 // Get the live map key for current entity (merges base + user logged outcomes)
@@ -1568,7 +1829,6 @@ const PRESETS = {
   'NYSE|05/17/1792': { name: 'NYSE', date: '05/17/1792' },
   'BTC|01/03/2009': { name: 'Bitcoin', date: '01/03/2009' },
   'GOLD|01/01/1975': { name: 'Gold Futures', date: '01/01/1975' },
-  'TED|05/01/1999': { name: 'Ted Way Aung Phyo', date: '05/01/1999' },
 };
 
 let currentMode = 'preset';
@@ -1825,6 +2085,15 @@ function renderAll() {
         </div>`;
     }
 
+    // Runitup858 signal: UD raw = 7, 11, or 28
+    var udRaw = ud.ordRaw;
+    var udFin = ud.ordinal.final;
+    var sig = udRaw === 28 ? "28" : udRaw === 11 ? "11" : udFin === 7 ? "7" : "none";
+    var signalBadgeHtml = "";
+    if (sig === "7")  signalBadgeHtml = '<div class="signal-badge signal-7">&#9660; SHORT SETUP &middot; 7 Day</div><div class="signal-hint">Wait for range &rarr; short the breakout</div>';
+    if (sig === "11") signalBadgeHtml = '<div class="signal-badge signal-11">&#9889; COLLAPSE SETUP &middot; 11 Master</div><div class="signal-hint">Instability &mdash; range break short &rarr; Fib target</div>';
+    if (sig === "28") signalBadgeHtml = '<div class="signal-badge signal-28">&#9650; WEALTH SETUP &middot; 28 Day</div><div class="signal-hint">Wait for range &rarr; long the breakout</div>';
+
     const card = document.createElement('div');
     card.className = `day-card ${cardBg} ${masterClass} ${todayClass}`;
     card.style.animationDelay = `${i * 0.05}s`;
@@ -1848,6 +2117,8 @@ function renderAll() {
         </div>
       </div>
 
+      ${signalBadgeHtml}
+      ${signalBadgeHtml}
       <div class="verdict-banner ${verdictCls}">
         ${verdict === 'CRASH' || verdict === 'BEAR' ? '▼' : verdict.includes('RALLY') ? '▲' : '◆'} ${verdict}
       </div>
@@ -1919,6 +2190,14 @@ function showDetail(date, ud, entData, univData, pw, pd_data, verdict, entitySco
   chains.innerHTML = html;
   panel.classList.add('visible');
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Price harmony section — pass UD numbers and signal type
+  var udOrd  = ud.ordinal.final;
+  var udCmp  = ud.compound.final;
+  var udRaw  = ud.ordRaw;
+  var pdFin  = pd_data ? pd_data.ordinal.final : 0;
+  var sig    = udRaw === 28 ? "28" : udRaw === 11 ? "11" : udOrd === 7 ? "7" : "none";
+  showPriceHarmony(date, udOrd, udCmp, pdFin, sig);
 }
 
 
@@ -2148,118 +2427,721 @@ function renderLog() {
 
 // Historical S&P 500 daily direction: 1=UP, -1=DOWN, 0=flat
 // Source: Feb 1 – Apr 5, 2026 weekdays
+
+// ══════════════════════════════════════════════════════════════════════
+// BACKTEST DATA PIPELINE
+// ══════════════════════════════════════════════════════════════════════
+//
+// ARCHITECTURE NOTE — GitHub Pages is a static file host. There is NO
+// backend server in this project. Browser-based CORS proxy services
+// (corsproxy.io, allorigins, etc.) are unreliable for historical data:
+// they rate-limit, block, or return stale responses unpredictably.
+//
+// ENABLE_LIVE_BACKTEST = false  →  skip all live fetch attempts entirely.
+//                                   Backtest runs on HISTORICAL seed data only.
+//
+// ENABLE_LIVE_BACKTEST = true   →  attempt fetch from a local/backend endpoint:
+//                                   GET /api/historical?symbol=SPY&start=YYYY-MM-DD&end=YYYY-MM-DD
+//                                   Returns JSON: { "dates": { "YYYY-M-D": 1|-1|0, ... } }
+//                                   This requires you to run a local server or deploy a backend.
+//                                   Do NOT set to true on GitHub Pages — it will always 404.
+//
+const ENABLE_LIVE_BACKTEST = false;
+
+// TICKER MAP — entity key → symbol for /api/historical endpoint
+const BT_TICKER_MAP = {
+  'SP500|03/04/1957':  'SPY',
+  'NASDAQ|02/08/1971': 'QQQ',
+  'DOW|05/26/1896':    'DIA',
+  'NYSE|05/17/1792':   'SPY',
+  'BTC|01/03/2009':    'BTC-USD',
+  'GOLD|01/01/1975':   'GC=F',
+};
+
+// Seed dataset — SP500 proxy, Feb 1 – Apr 6 2026
+// This is the permanent fallback when ENABLE_LIVE_BACKTEST = false.
 const HISTORICAL = {
-  // Format: 'YYYY-M-D': direction (1=rally, -1=crash, 0=neutral)
-  // February 2026
   '2026-2-2': 1,  '2026-2-3': 1,  '2026-2-4': 1,  '2026-2-5': 1,  '2026-2-6': -1,
-  '2026-2-9': 1,  '2026-2-10': -1, '2026-2-11': 1, '2026-2-12': 1, '2026-2-13': -1,
-  '2026-2-17': 1, '2026-2-18': -1, '2026-2-19': 1, '2026-2-20': -1,
-  '2026-2-23': -1,'2026-2-24': -1, '2026-2-25': 1, '2026-2-26': -1, '2026-2-27': 1,
-  // March 2026
+  '2026-2-9': 1,  '2026-2-10': -1,'2026-2-11': 1, '2026-2-12': 1, '2026-2-13': -1,
+  '2026-2-17': 1, '2026-2-18': -1,'2026-2-19': 1, '2026-2-20': -1,
+  '2026-2-23': -1,'2026-2-24': -1,'2026-2-25': 1, '2026-2-26': -1,'2026-2-27': 1,
   '2026-3-2': 1,  '2026-3-3': -1, '2026-3-4': -1, '2026-3-5': 1,  '2026-3-6': -1,
   '2026-3-9': -1, '2026-3-10': -1,'2026-3-11': -1,'2026-3-12': 1, '2026-3-13': 1,
   '2026-3-16': 1, '2026-3-17': 1, '2026-3-18': 1, '2026-3-19': -1,'2026-3-20': -1,
   '2026-3-23': -1,'2026-3-24': 1, '2026-3-25': 1, '2026-3-26': -1,'2026-3-27': -1,
   '2026-3-30': 1, '2026-3-31': 1,
-  // April 2026
   '2026-4-1': 1,  '2026-4-2': -1, '2026-4-3': -1, '2026-4-6': 0,
 };
 
-function runBacktest() {
-  const btSel = document.getElementById('bt-entity-sel');
-  const sel = btSel;
-  const [, entityDateStr] = sel.value.split('|');
-  const entityDate = parseDate(entityDateStr);
-  const entityName = sel.options[sel.selectedIndex].text;
+// ── fetchHistoricalDailyData ──────────────────────────────────────────
+// When ENABLE_LIVE_BACKTEST = true, calls /api/historical (local backend only).
+// When false, returns null immediately — no fetch, no console spam.
+async function fetchHistoricalDailyData(symbol, startDate, endDate) {
+  if (!ENABLE_LIVE_BACKTEST) return null;
 
-  let rows = '';
-  let correct = 0, incorrect = 0, neutral = 0;
+  // Local/backend endpoint only. Never use a public CORS proxy here.
+  var start = startDate.getFullYear() + '-'
+    + String(startDate.getMonth()+1).padStart(2,'0') + '-'
+    + String(startDate.getDate()).padStart(2,'0');
+  var end = endDate.getFullYear() + '-'
+    + String(endDate.getMonth()+1).padStart(2,'0') + '-'
+    + String(endDate.getDate()).padStart(2,'0');
+  var endpoint = '/api/historical?symbol=' + symbol + '&start=' + start + '&end=' + end;
 
-  const startDate = new Date(2026, 1, 1); // Feb 1
-  const endDate   = new Date(2026, 3, 6); // Apr 6
-
-  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    const dow = d.getDay();
-    if (dow === 0 || dow === 6) continue;
-
-    const key = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
-    const actual = HISTORICAL[key];
-    if (actual === undefined) continue;
-
-    const entData  = computeEntityScore(entityDate, d);
-    const univData = computeUniversalScore(d);
-    const btEntityKey = btSel.value;
-    const pred     = entData ? getVerdict(entData.score, univData.score, entData, univData, btEntityKey) : 'NEUTRAL';
-    const entScore = entData ? entData.score : 0;
-    const udRaw    = univData.ud.ordRaw;
-
-    const predBullish = pred.includes('RALLY');
-    const predBearish = pred === 'CRASH' || pred === 'BEAR';
-    const predNeutral = !predBullish && !predBearish;
-
-    let resultClass = 'bt-na', resultText = '—';
-    if (!predNeutral && actual !== 0) {
-      if ((predBullish && actual > 0) || (predBearish && actual < 0)) {
-        resultClass = 'bt-correct'; resultText = '✓ CORRECT'; correct++;
-      } else {
-        resultClass = 'bt-wrong'; resultText = '✗ WRONG'; incorrect++;
-      }
-    } else {
-      neutral++;
-      resultText = actual === 0 ? 'FLAT' : predNeutral ? 'NEUTRAL' : '—';
-    }
-
-    const actualClass = actual > 0 ? 'bt-pred-rally' : actual < 0 ? 'bt-pred-crash' : 'bt-na';
-    const predClass   = predBullish ? 'bt-pred-rally' : predBearish ? 'bt-pred-crash' : 'bt-pred-neutral';
-    const dateLabel   = MONTHS[d.getMonth()] + ' ' + d.getDate();
-
-    const pdFinal = entData ? entData.pd.final : '—';
-    const udFinal = univData.ud.ordinal.final;
-    const mapEntry = getLiveMap(btEntityKey)[udFinal] || {up:0,down:0};
-    const mapTotal = mapEntry.up + mapEntry.down;
-    const mapPct   = mapTotal > 0 ? Math.round(mapEntry.up/mapTotal*100) + '%↑' : '?';
-    rows += `<tr>
-      <td>${dateLabel}</td>
-      <td class="${predClass}">${pred}</td>
-      <td>${univData.ud.ordRaw}→<strong>${udFinal}</strong> <span style="color:var(--dim);font-size:9px;">(${mapPct} in ${mapTotal}d)</span></td>
-      <td>${pdFinal}</td>
-      <td class="${actualClass}">${actual > 0 ? '▲ UP' : actual < 0 ? '▼ DOWN' : '◆ FLAT'}</td>
-      <td class="${resultClass}">${resultText}</td>
-    </tr>`;
+  try {
+    var resp = await fetch(endpoint);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' from ' + endpoint);
+    var json = await resp.json();
+    if (!json || !json.dates) throw new Error('invalid response from ' + endpoint);
+    return json.dates; // already a direction map: { 'YYYY-M-D': 1|-1|0 }
+  } catch (e) {
+    console.warn('[Backtest] /api/historical failed:', e.message);
+    return null;
   }
-
-  const total = correct + incorrect;
-  const acc   = total > 0 ? Math.round((correct / total) * 100) : 0;
-
-  document.getElementById('backtest-results').innerHTML = `
-    <div class="backtest-table-wrap">
-      <table class="backtest-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Prediction</th>
-            <th>UD → Final</th>
-            <th>PD</th>
-            <th>Actual (S&P)</th>
-            <th>Result</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div class="backtest-summary">
-        <div>Entity: <span>${entityName}</span></div>
-        <div>Correct: <span style="color:var(--green)">${correct}</span></div>
-        <div>Wrong: <span style="color:var(--red)">${incorrect}</span></div>
-        <div>Neutral/Skipped: <span>${neutral}</span></div>
-        <div>Accuracy: <span style="color:${acc>=60?'var(--green)':acc>=40?'var(--gold2)':'var(--red)'}">${acc}%</span></div>
-      </div>
-    </div>
-  `;
 }
 
+// ── runBacktest ───────────────────────────────────────────────────────
+async function runBacktest() {
+  var btSel      = document.getElementById('bt-entity-sel');
+  var entityKey  = btSel.value;
+  var entityDate = parseDate(entityKey.split('|')[1]);
+  var entityName = btSel.options[btSel.selectedIndex].text;
+  var ticker     = BT_TICKER_MAP[entityKey] || 'SPY';
+  var resultsEl  = document.getElementById('backtest-results');
+
+  // Clear previous output immediately — prevents stacked banners
+  resultsEl.innerHTML = '';
+
+  // --- Parse selected date range from inputs ---
+  var today   = new Date(); today.setHours(0,0,0,0);
+  var startEl = document.getElementById('bt-start-date');
+  var endEl   = document.getElementById('bt-end-date');
+  var selStart, selEnd;
+  if (startEl && startEl.value) {
+    var sp = startEl.value.split('-');
+    selStart = new Date(+sp[0], +sp[1]-1, +sp[2]);
+  } else {
+    selStart = new Date(today); selStart.setDate(selStart.getDate() - 90);
+  }
+  if (endEl && endEl.value) {
+    var ep = endEl.value.split('-');
+    selEnd = new Date(+ep[0], +ep[1]-1, +ep[2]);
+  } else {
+    selEnd = new Date(today);
+  }
+  if (selEnd > today) selEnd = today;
+  if (selStart > selEnd) {
+    resultsEl.innerHTML = '<div style="padding:16px;font-family:\'Space Mono\',monospace;font-size:11px;color:var(--red)">Start date must be before end date.</div>';
+    return;
+  }
+
+  // --- Attempt live fetch (only if ENABLE_LIVE_BACKTEST = true) ---
+  var activeHistorical = null;
+  var dataSource       = 'seed';
+
+  if (ENABLE_LIVE_BACKTEST) {
+    resultsEl.innerHTML = '<div style="padding:16px;font-family:\'Space Mono\',monospace;font-size:11px;color:var(--gold2)">\u23f3 Fetching ' + ticker + ' from /api/historical...</div>';
+    var liveMap = await fetchHistoricalDailyData(ticker, selStart, selEnd);
+    if (liveMap && Object.keys(liveMap).length > 0) {
+      activeHistorical = liveMap;
+      dataSource       = 'live';
+    } else {
+      activeHistorical = HISTORICAL;
+      dataSource       = 'seed';
+    }
+  } else {
+    activeHistorical = HISTORICAL;
+    dataSource       = 'seed';
+  }
+
+  // --- Build sorted key list ---
+  var histKeys = Object.keys(activeHistorical).sort(function(a, b) {
+    var pa = a.split('-').map(Number), pb = b.split('-').map(Number);
+    return new Date(pa[0],pa[1]-1,pa[2]) - new Date(pb[0],pb[1]-1,pb[2]);
+  });
+
+  if (histKeys.length === 0) {
+    resultsEl.innerHTML = '<div style="padding:16px;font-family:\'Space Mono\',monospace;font-size:11px;color:var(--dim)">No data available.</div>';
+    return;
+  }
+
+  var fp = histKeys[0].split('-').map(Number), lp = histKeys[histKeys.length-1].split('-').map(Number);
+  var histStart = new Date(fp[0],fp[1]-1,fp[2]);
+  var histEnd   = new Date(lp[0],lp[1]-1,lp[2]);
+
+  // --- Effective range ---
+  var effStart      = selStart > histStart ? selStart : histStart;
+  var effEnd        = selEnd   < histEnd   ? selEnd   : histEnd;
+  var clampedByData = selEnd > histEnd;
+
+  // --- Iterate only keys within effective range ---
+  var rows = '', correct = 0, wrong = 0, neutral = 0, rowsTested = 0;
+  var actualEffStart = null, actualEffEnd = null;
+
+  histKeys.forEach(function(key) {
+    var parts = key.split('-').map(Number);
+    var d = new Date(parts[0], parts[1]-1, parts[2]);
+    if (d < effStart || d > effEnd) return;
+
+    var actual   = activeHistorical[key];
+    var entData  = computeEntityScore(entityDate, d);
+    var univData = computeUniversalScore(d);
+    var pred     = entData ? getVerdict(entData.score, univData.score, entData, univData, entityKey) : 'NEUTRAL';
+    var udFinal  = univData.ud.ordinal.final;
+    var udRaw    = univData.ud.ordRaw;
+    var pdFinal  = entData ? entData.pd.final : '\u2014';
+
+    if (!actualEffStart) actualEffStart = d;
+    actualEffEnd = d;
+    rowsTested++;
+
+    var sig = udRaw === 28 ? '28' : udRaw === 11 ? '11' : udFinal === 7 ? '7' : '';
+    var sigColor = sig === '28' ? 'var(--gold2)' : sig === '11' ? 'var(--master2)' : 'var(--red)';
+    var sigBadge = sig ? '<span style="color:'+sigColor+';font-size:8px"> ['+sig+']</span>' : '';
+
+    var predBullish = pred.includes('RALLY');
+    var predBearish = pred === 'CRASH' || pred === 'BEAR';
+    var predNeutral = !predBullish && !predBearish;
+
+    var resultClass, resultText;
+    if (predNeutral || actual === 0) {
+      resultClass = 'bt-na'; resultText = actual === 0 ? 'FLAT' : 'NEUTRAL'; neutral++;
+    } else if ((predBullish && actual > 0) || (predBearish && actual < 0)) {
+      resultClass = 'bt-correct'; resultText = '\u2713 CORRECT'; correct++;
+    } else {
+      resultClass = 'bt-wrong'; resultText = '\u2717 WRONG'; wrong++;
+    }
+
+    var predClass = predBullish ? 'bt-pred-rally' : predBearish ? 'bt-pred-crash' : 'bt-pred-neutral';
+    var actualTxt = actual > 0 ? '<span class="bt-pred-rally">\u25b2 UP</span>'
+                  : actual < 0 ? '<span class="bt-pred-crash">\u25bc DOWN</span>'
+                  : '<span class="bt-na">\u25c6 FLAT</span>';
+    var mapEntry = (LEARNED_MAPS[entityKey] || {})[udFinal] || {up:0,down:0};
+    var mapTotal = mapEntry.up + mapEntry.down;
+    var mapPct   = mapTotal > 0 ? Math.round(mapEntry.up/mapTotal*100)+'%' : '?';
+    var dateLabel = MONTHS[d.getMonth()] + ' ' + d.getDate() + ' ' + d.getFullYear();
+
+    rows += '<tr>'
+      + '<td>' + dateLabel + '</td>'
+      + '<td class="' + predClass + '">' + pred + sigBadge + '</td>'
+      + '<td>' + udRaw + '\u2192<strong>' + udFinal + '</strong>'
+        + '<span style="color:var(--dim);font-size:9px"> (' + mapPct + ' in ' + mapTotal + 'd)</span></td>'
+      + '<td>' + pdFinal + '</td>'
+      + '<td>' + actualTxt + '</td>'
+      + '<td class="' + resultClass + '">' + resultText + '</td>'
+      + '</tr>';
+  });
+
+  if (rowsTested === 0) {
+    var histEndFmt = MONTHS[histEnd.getMonth()] + ' ' + histEnd.getDate() + ', ' + histEnd.getFullYear();
+    resultsEl.innerHTML = '<div style="padding:16px;font-family:\'Space Mono\',monospace;font-size:11px;color:var(--dim)">'
+      + 'No data in selected range. Latest available: ' + histEndFmt + '</div>';
+    return;
+  }
+
+  function fmtD(d) { return MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); }
+  var effStartFmt  = fmtD(actualEffStart);
+  var effEndFmt    = fmtD(actualEffEnd);
+  var selStartFmt  = fmtD(selStart);
+  var selEndFmt    = fmtD(selEnd);
+  var histEndFmt2  = fmtD(histEnd);
+
+  var total    = correct + wrong;
+  var acc      = total > 0 ? Math.round(correct/total*100) : 0;
+  var accColor = acc >= 60 ? 'var(--green)' : acc >= 40 ? 'var(--gold2)' : 'var(--red)';
+
+  // Source badge — honest about what data was used
+  var srcBadge = dataSource === 'live'
+    ? '<span style="background:rgba(78,202,139,0.15);color:var(--green);border:1px solid rgba(78,202,139,0.3);padding:3px 9px;border-radius:3px;font-size:9px;">'
+        + '\u2713 Live data \u2014 ' + ticker + ' from /api/historical</span>'
+    : '<span style="background:rgba(122,138,154,0.1);color:var(--dim);border:1px solid var(--border);padding:3px 9px;border-radius:3px;font-size:9px;">'
+        + 'Seed data (SP500 proxy, Feb\u2013Apr 2026). '
+        + (ENABLE_LIVE_BACKTEST ? 'Live fetch failed.' : 'Live backtest disabled \u2014 set ENABLE_LIVE_BACKTEST=true + deploy backend to enable.')
+        + '</span>';
+
+  var clampNote = clampedByData
+    ? '<div style="margin-bottom:8px;padding:6px 12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:4px;font-family:\'Space Mono\',monospace;font-size:9px;color:var(--gold2);">'
+        + '\u26a0 Selected end date exceeds available data. Showing through ' + histEndFmt2 + '.</div>'
+    : '';
+
+  var noteHtml = '<div style="font-family:\'Space Mono\',monospace;font-size:8px;color:var(--dim);margin-top:4px;">'
+    + 'Selected: ' + selStartFmt + ' \u2192 ' + selEndFmt
+    + (clampedByData ? ' \u2014 clamped to ' + histEndFmt2 : '') + '</div>';
+
+  resultsEl.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">' + srcBadge + '</div>'
+    + clampNote
+    + '<div class="backtest-table-wrap">'
+      + '<table class="backtest-table">'
+        + '<thead><tr>'
+          + '<th>Date</th><th>Prediction</th><th>UD Lifepath</th><th>PD</th><th>Actual</th><th>Result</th>'
+        + '</tr></thead>'
+        + '<tbody>' + rows + '</tbody>'
+      + '</table>'
+      + '<div class="backtest-summary">'
+        + '<div>Entity: <span>' + entityName + '</span></div>'
+        + '<div>Range tested: <span>' + effStartFmt + ' \u2192 ' + effEndFmt + '</span></div>'
+        + '<div>Rows tested: <span>' + rowsTested + '</span></div>'
+        + '<div>Correct: <span style="color:var(--green)">' + correct + '</span></div>'
+        + '<div>Wrong: <span style="color:var(--red)">' + wrong + '</span></div>'
+        + '<div>Neutral / Flat: <span>' + neutral + '</span></div>'
+        + '<div>Accuracy: <span style="color:' + accColor + '">' + acc + '% (' + total + ' directional)</span></div>'
+      + '</div>'
+      + noteHtml
+    + '</div>';
+}
+
+
+
+
+// ── Price Level Numerology (Gann Method) ────────────────────────────────────
+// Sum ALL digits of price including decimal
+// e.g. 5651.25 → 5+6+5+1+2+5 = 24 → 6
+// Decimal separately: 25 → 2+5 = 7
+// Compare each result to day's UD number — match = price is "in harmony"
+
+var _phDate = null;
+var _phUdOrd = 0;
+var _phUdCmp = 0;
+var _phPd = 0;
+var _phSig = "none";
+
+function showPriceHarmony(date, udOrd, udCmp, pdFinal, sigType) {
+  _phDate = date;
+  _phUdOrd = udOrd;
+  _phUdCmp = udCmp;
+  _phPd    = pdFinal;
+  _phSig   = sigType;
+
+  // Show the section
+  var ph = document.getElementById("price-harmony");
+  if (ph) ph.style.display = "block";
+
+  // Fill vibration context
+  var el;
+  el = document.getElementById("ph-ud-ord"); if (el) el.textContent = udOrd;
+  el = document.getElementById("ph-ud-cmp"); if (el) el.textContent = udCmp;
+  el = document.getElementById("ph-pd");     if (el) el.textContent = pdFinal || "—";
+
+  // Runitup signal label
+  var sigMap = { "7":"7 Day — SHORT bias", "11":"11 Master — COLLAPSE bias", "28":"28 Day — WEALTH bias", "none":"No primary signal" };
+  el = document.getElementById("ph-sig"); if (el) el.textContent = sigMap[sigType] || "—";
+
+  // Gann note based on signal
+  var noteMap = {
+    "7":  "Gann: 7 = rest & weakness. Price often rejects key levels. Expect range → short breakout.",
+    "11": "Gann: 11 = master instability. Amplifies weakness. Historic crashes cluster on 11 days.",
+    "28": "Gann: 28 = wealth vibration. 28 reduces to 10 (leadership). Expect range → long breakout.",
+    "none": "Gann: No primary signal today. Look for confluence in OHLC digit sums with UD number."
+  };
+  el = document.getElementById("ph-gann-note"); if (el) el.textContent = noteMap[sigType] || "";
+
+  // Clear inputs and recalc
+  var fields = ["ph-high","ph-low","ph-close","ph-open"];
+  fields.forEach(function(id) {
+    var f = document.getElementById(id);
+    if (f) f.value = "";
+  });
+  var results = ["ph-res-high","ph-res-low","ph-res-close","ph-res-open"];
+  results.forEach(function(id) {
+    var r = document.getElementById(id);
+    if (r) { r.textContent = "—"; r.className = "ph-result ph-nomatch"; }
+  });
+  var sum = document.getElementById("ph-summary");
+  if (sum) { sum.textContent = "Enter prices to check harmonic alignment"; sum.style.color = "var(--dim)"; }
+}
+
+function phDigitReduce(priceStr) {
+  var s = String(priceStr).trim();
+  if (!s || isNaN(parseFloat(s))) return null;
+  var parts = s.split(".");
+  var whole = parts[0] || "";
+  var dec   = parts[1] || "";
+  // Full digit sum (all digits, no decimal point)
+  var allDigits = (whole + dec).split("").map(Number);
+  var fullRaw = allDigits.reduce(function(a, c) { return a + c; }, 0);
+  // Decimal-only digit sum
+  var decRaw = dec ? dec.split("").map(Number).reduce(function(a, c) { return a + c; }, 0) : null;
+  function red(n) {
+    while (n > 9 && n !== 11 && n !== 22 && n !== 33 && n !== 44)
+      n = String(n).split("").reduce(function(a, c) { return a + parseInt(c); }, 0);
+    return n;
+  }
+  return {
+    fullRaw:  fullRaw,
+    fullFin:  red(fullRaw),
+    decRaw:   decRaw,
+    decFin:   decRaw !== null ? red(decRaw) : null
+  };
+}
+
+function calcPriceHarmony() {
+  var udNums = [_phUdOrd, _phUdCmp, _phPd].filter(function(n) { return n && n > 0; });
+  var fields = [
+    { inId: "ph-high",  outId: "ph-res-high",  label: "HIGH"  },
+    { inId: "ph-low",   outId: "ph-res-low",   label: "LOW"   },
+    { inId: "ph-close", outId: "ph-res-close", label: "CLOSE" },
+    { inId: "ph-open",  outId: "ph-res-open",  label: "OPEN"  }
+  ];
+
+  var hits = 0, total = 0, matchNames = [], matchNums = [];
+
+  fields.forEach(function(f) {
+    var inp = document.getElementById(f.inId);
+    var res = document.getElementById(f.outId);
+    if (!inp || !res) return;
+    var val = inp.value.trim();
+    if (!val) { res.textContent = "—"; res.className = "ph-result ph-nomatch"; return; }
+    var r = phDigitReduce(val);
+    if (!r) { res.textContent = "?"; res.className = "ph-result ph-nomatch"; return; }
+    total++;
+
+    // Check full number and decimal against all UD numbers
+    var priceFins = [r.fullFin];
+    if (r.decFin !== null) priceFins.push(r.decFin);
+    var isMatch = priceFins.some(function(p) {
+      return udNums.indexOf(p) >= 0;
+    });
+
+    var txt = r.fullRaw + "→" + r.fullFin;
+    if (r.decFin !== null) txt += "  ." + r.decRaw + "→" + r.decFin;
+    if (isMatch) txt += "  ✦";
+
+    res.textContent = txt;
+    res.className = "ph-result " + (isMatch ? "ph-match" : "ph-nomatch");
+
+    if (isMatch) {
+      hits++;
+      // Find which specific number matched
+      var whichNum = priceFins.find(function(p) { return udNums.indexOf(p) >= 0; });
+      matchNames.push(f.label + "=" + r.fullFin);
+      if (matchNums.indexOf(whichNum) < 0) matchNums.push(whichNum);
+    }
+  });
+
+  var sumEl = document.getElementById("ph-summary");
+  if (!sumEl) return;
+
+  if (total === 0) {
+    sumEl.textContent = "Enter prices to check harmonic alignment";
+    sumEl.style.color = "var(--dim)";
+    return;
+  }
+
+  var sigLabel = { "7":"SHORT setup confirmed", "11":"COLLAPSE setup confirmed", "28":"WEALTH setup confirmed", "none":"" };
+
+  if (hits >= 3) {
+    sumEl.textContent = "✦ STRONG HARMONY — " + matchNames.join(", ") + " all vibrate with UD=" + matchNums.join("/") + ". " + (sigLabel[_phSig] || "High confluence.");
+    sumEl.style.color = "var(--green)";
+  } else if (hits === 2) {
+    sumEl.textContent = "✦ HARMONY — " + matchNames.join(", ") + " match UD=" + matchNums.join("/") + ". " + (sigLabel[_phSig] || "Good confluence.");
+    sumEl.style.color = "var(--green)";
+  } else if (hits === 1) {
+    sumEl.textContent = "◆ PARTIAL — " + matchNames.join(", ") + " matches UD=" + matchNums.join("/") + ". Weak confluence.";
+    sumEl.style.color = "var(--gold2)";
+  } else {
+    sumEl.textContent = "No harmonic alignment — prices not in vibration with UD=" + _phUdOrd + ". Price may be in transit.";
+    sumEl.style.color = "var(--dim)";
+  }
+}
+// ── End Price Level Numerology ────────────────────────────────────────────────
+
+function initBacktestDates() {
+  var today = new Date();
+  var yyyy  = today.getFullYear();
+  var mm    = String(today.getMonth() + 1).padStart(2, '0');
+  var dd    = String(today.getDate()).padStart(2, '0');
+  var todayStr = yyyy + '-' + mm + '-' + dd;
+
+  var start = new Date(today);
+  start.setDate(start.getDate() - 90);
+  var sy = start.getFullYear();
+  var sm = String(start.getMonth() + 1).padStart(2, '0');
+  var sd = String(start.getDate()).padStart(2, '0');
+  var startStr = sy + '-' + sm + '-' + sd;
+
+  var endEl   = document.getElementById('bt-end-date');
+  var startEl = document.getElementById('bt-start-date');
+
+  if (endEl) {
+    endEl.value = todayStr;
+    endEl.max   = todayStr; // never allow future
+    endEl.addEventListener('change', function() {
+      if (this.value > todayStr) this.value = todayStr;
+      if (startEl && startEl.value > this.value) startEl.value = this.value;
+    });
+  }
+  if (startEl) {
+    startEl.value = startStr;
+    startEl.max   = todayStr;
+    startEl.addEventListener('change', function() {
+      if (endEl && this.value > endEl.value) this.value = endEl.value;
+    });
+  }
+}
 // ── Init ─────────────────────────────────────────────────────────────
 buildWeekSelect();
 applyPreset();
+initBacktestDates();
+
+
+// ── Market Intel ────────────────────────────────────────────────────────────
+var PROXY = "https://corsproxy.io/?";
+var YF    = "https://query1.finance.yahoo.com/v8/finance/chart/";
+var mktData = { spy:null, qqq:null, vix:null, dxy:null, fetched:false, loading:false, priceConf:0, structure:null };
+var intelOpen = false;
+
+function toggleIntel() {
+  intelOpen = !intelOpen;
+  document.getElementById("intel-body").classList.toggle("open", intelOpen);
+  document.getElementById("intel-toggle").textContent = intelOpen ? "▴ COLLAPSE" : "▾ EXPAND";
+  if (intelOpen && !mktData.fetched && !mktData.loading) fetchAllMarketData();
+}
+
+function setDot(cls) {
+  var d = document.getElementById("intel-dot");
+  if (d) d.className = "intel-dot " + cls;
+}
+
+async function fetchTicker(sym, range) {
+  var url = encodeURIComponent(YF + sym + "?interval=1d&range=" + (range || "10d"));
+  var r = await fetch(PROXY + url);
+  var d = await r.json();
+  var res = d && d.chart && d.chart.result && d.chart.result[0];
+  if (!res) throw new Error("no data");
+  return { q: res.indicators.quote[0], ts: res.timestamp };
+}
+
+async function fetchAllMarketData() {
+  if (mktData.loading) return;
+  mktData.loading = true;
+  setDot("loading");
+  try {
+    var results = await Promise.allSettled([
+      fetchTicker("SPY", "15d"),
+      fetchTicker("QQQ", "5d"),
+      fetchTicker("%5EVIX", "5d"),
+      fetchTicker("DX-Y.NYB", "5d")
+    ]);
+    if (results[0].status === "fulfilled") {
+      var s = results[0].value, q = s.q, ts = s.ts, last = ts.length - 1;
+      var vols = q.volume.filter(function(v) { return v; });
+      mktData.spy = {
+        price: q.close[last], prev: q.close[last-1],
+        high: q.high[last], low: q.low[last],
+        open: q.open[last], close: q.close[last],
+        volume: q.volume[last],
+        avgVol: Math.round(vols.reduce(function(a,b){return a+b;},0)/vols.length),
+        highs: q.high.slice(-10).filter(Boolean),
+        lows:  q.low.slice(-10).filter(Boolean)
+      };
+      renderSpy();
+      calcStructure();
+      autoFill();
+    }
+    if (results[1].status === "fulfilled") {
+      var s = results[1].value, last = s.ts.length-1;
+      mktData.qqq = { price: s.q.close[last], prev: s.q.close[last-1] };
+      renderTicker("qqq-price","qqq-chg", mktData.qqq.price, mktData.qqq.prev, "$");
+    }
+    if (results[2].status === "fulfilled") {
+      var s = results[2].value, last = s.ts.length-1;
+      mktData.vix = { price: s.q.close[last], prev: s.q.close[last-1] };
+      renderVix();
+    }
+    if (results[3].status === "fulfilled") {
+      var s = results[3].value, last = s.ts.length-1;
+      mktData.dxy = { price: s.q.close[last], prev: s.q.close[last-1] };
+      renderTicker("dxy-price","dxy-chg", mktData.dxy.price, mktData.dxy.prev, "");
+    }
+    mktData.fetched = true;
+    mktData.loading = false;
+    setDot("live");
+    calcConfluence();
+  } catch(e) {
+    mktData.loading = false;
+    setDot("error");
+  }
+}
+
+function chgPct(price, prev) { return (price - prev) / prev * 100; }
+
+function renderTicker(priceId, chgId, price, prev, prefix) {
+  var pEl = document.getElementById(priceId);
+  var cEl = document.getElementById(chgId);
+  if (!pEl || !price || !prev) return;
+  pEl.textContent = prefix + price.toFixed(2);
+  var pct = chgPct(price, prev);
+  cEl.textContent = (pct >= 0 ? "+" : "") + pct.toFixed(2) + "%";
+  cEl.className = "ticker-chg " + (pct > 0.05 ? "up" : pct < -0.05 ? "down" : "flat");
+}
+
+function renderSpy() {
+  var d = mktData.spy;
+  renderTicker("spy-price","spy-chg", d.price, d.prev, "$");
+  var ratio = d.volume / d.avgVol;
+  var lbl = ratio >= 1.5 ? "HIGH VOL" : ratio <= 0.6 ? "LOW VOL" : "NORMAL";
+  var el = document.getElementById("spy-vol");
+  if (el) el.textContent = "vol: " + (d.volume/1e6).toFixed(1) + "M (" + lbl + ")";
+}
+
+function renderVix() {
+  var d = mktData.vix;
+  renderTicker("vix-price","vix-chg", d.price, d.prev, "");
+  var v = d.price;
+  var lbl = v >= 35 ? "EXTREME FEAR" : v >= 25 ? "FEAR" : v >= 20 ? "ELEVATED" : v >= 15 ? "NORMAL" : "COMPLACENCY";
+  var el = document.getElementById("vix-lbl"); if (el) el.textContent = lbl;
+  var needle = document.getElementById("vix-needle");
+  if (needle) needle.style.left = Math.min(100, Math.max(0, (v-10)/35*100)) + "%";
+}
+
+function autoFill() {
+  var d = mktData.spy;
+  var fields = [
+    ["price-high",  d.high],
+    ["price-low",   d.low],
+    ["price-close", d.close],
+    ["price-open",  d.open]
+  ];
+  fields.forEach(function(f) {
+    var el = document.getElementById(f[0]);
+    if (el && !el.value) el.value = f[1].toFixed(2);
+  });
+  calcPriceNumer();
+}
+
+function calcStructure() {
+  var d = mktData.spy;
+  var badge = document.getElementById("struct-badge");
+  var hhll  = document.getElementById("struct-hhll");
+  if (!d || d.highs.length < 4) {
+    if (badge) { badge.textContent = "INSUFFICIENT DATA"; badge.className = "struct-badge struct-LOAD"; }
+    return;
+  }
+  var h = d.highs, l = d.lows, n = h.length;
+  var hh = h[n-1]>h[n-2] && h[n-2]>h[n-3];
+  var hl = l[n-1]>l[n-2] && l[n-2]>l[n-3];
+  var lh = h[n-1]<h[n-2] && h[n-2]<h[n-3];
+  var ll = l[n-1]<l[n-2] && l[n-2]<l[n-3];
+  var struct, cls;
+  if (hh && hl)      { struct="UPTREND";   cls="struct-UP"; }
+  else if (lh && ll) { struct="DOWNTREND"; cls="struct-DOWN"; }
+  else if (hh || hl) { struct="REVERSAL";  cls="struct-REV"; }
+  else               { struct="RANGING";   cls="struct-RANGE"; }
+  mktData.structure = struct;
+  if (badge) { badge.textContent = struct; badge.className = "struct-badge " + cls; }
+  if (hhll) {
+    var rh = h.slice(-3), rl = l.slice(-3);
+    hhll.innerHTML =
+      "<span><span class='" + (hh?"hl-up":lh?"hl-dn":"") + "'>" + (hh?"HH":lh?"LH":"--") + "</span>" +
+      " Highs: " + rh.map(function(v){return v.toFixed(1);}).join(" → ") + "</span>" +
+      "<span><span class='" + (hl?"hl-up":ll?"hl-dn":"") + "'>" + (hl?"HL":ll?"LL":"--") + "</span>" +
+      " Lows: " + rl.map(function(v){return v.toFixed(1);}).join(" → ") + "</span>";
+  }
+  calcConfluence();
+}
+
+function digitReduce(str) {
+  var s = String(str).trim();
+  if (!s || isNaN(parseFloat(s))) return null;
+  var parts = s.split(".");
+  var whole = parts[0] || "", dec = parts[1] || "";
+  var allDigs = (whole+dec).split("").map(Number);
+  var raw = allDigs.reduce(function(a,c){return a+c;},0);
+  var decRaw = dec ? dec.split("").map(Number).reduce(function(a,c){return a+c;},0) : null;
+  function red(n) { while(n>9&&n!==11&&n!==22&&n!==33&&n!==44) n=String(n).split("").reduce(function(a,c){return a+parseInt(c);},0); return n; }
+  return { raw:raw, fin:red(raw), decRaw:decRaw, decFin:decRaw!==null?red(decRaw):null };
+}
+
+function calcPriceNumer() {
+  var today = new Date();
+  var ud = universalDay(today);
+  var udFin = ud.ordinal.final, udCmp = ud.compound.final;
+  var udEl = document.getElementById("ud-display");
+  if (udEl) udEl.textContent = "UD=" + udFin + "/" + udCmp;
+  var fields = [
+    ["price-high","res-high"],
+    ["price-low","res-low"],
+    ["price-close","res-close"],
+    ["price-open","res-open"]
+  ];
+  var hits = 0, total = 0, matches = [];
+  fields.forEach(function(f) {
+    var inp = document.getElementById(f[0]);
+    var res = document.getElementById(f[1]);
+    if (!inp || !res) return;
+    var val = inp.value.trim();
+    if (!val) { res.textContent = "—"; res.style.color = "var(--dim)"; return; }
+    var r = digitReduce(val);
+    if (!r) { res.textContent = "?"; return; }
+    total++;
+    var udNums = [udFin, udCmp];
+    var isMatch = udNums.indexOf(r.fin) >= 0 || (r.decFin !== null && udNums.indexOf(r.decFin) >= 0);
+    if (isMatch) { hits++; matches.push(f[0].replace("price-","").toUpperCase()+"="+r.fin); }
+    res.textContent = r.raw + "→" + r.fin + (r.decFin !== null ? " ."+r.decRaw+"→"+r.decFin : "") + (isMatch ? " ✦" : "");
+    res.style.color = isMatch ? "var(--green)" : "var(--dim)";
+  });
+  var sumEl = document.getElementById("price-summary");
+  if (sumEl) {
+    if (!total)       { sumEl.textContent = "Enter prices to check confluence"; sumEl.style.color = "var(--dim)"; }
+    else if (hits>=3) { sumEl.textContent = "✦ STRONG CONFLUENCE: "+matches.join(", ")+" match UD="+udFin; sumEl.style.color = "var(--green)"; }
+    else if (hits>=2) { sumEl.textContent = "✦ CONFLUENCE: "+matches.join(", ")+" match UD="+udFin; sumEl.style.color = "var(--green)"; }
+    else if (hits===1){ sumEl.textContent = "◆ PARTIAL: "+matches.join(", ")+" matches UD="+udFin; sumEl.style.color = "var(--gold2)"; }
+    else              { sumEl.textContent = "No confluence with UD="+udFin; sumEl.style.color = "var(--dim)"; }
+  }
+  mktData.priceConf = hits>=3?2 : hits>=2?1 : hits===1?0.5 : -0.5;
+  calcConfluence();
+}
+
+function calcConfluence() {
+  var numerScore = 0;
+  var entityDate = parseDate(currentEntity.date);
+  if (entityDate) {
+    var presetEntry = Object.entries(PRESETS).find(function(e){ return e[1].date===currentEntity.date; });
+    var eKey = presetEntry ? presetEntry[0] : "SP500|03/04/1957";
+    var entData  = computeEntityScore(entityDate, new Date());
+    var univData = computeUniversalScore(new Date());
+    if (entData) {
+      var v = getLearnedVerdict(eKey, entData, univData);
+      if (v==="STRONG RALLY") numerScore=2;
+      else if (v==="RALLY")   numerScore=1;
+      else if (v==="CRASH")   numerScore=-2;
+      else if (v==="BEAR")    numerScore=-1;
+    }
+  }
+  var structScore = 0;
+  if (mktData.structure) {
+    var isUp = mktData.structure==="UPTREND", isDn = mktData.structure==="DOWNTREND";
+    if (numerScore>0 && isUp)  structScore=1;
+    if (numerScore>0 && isDn)  structScore=-1;
+    if (numerScore<0 && isDn)  structScore=1;
+    if (numerScore<0 && isUp)  structScore=-1;
+  }
+  var vixScore = 0;
+  if (mktData.vix) { var v=mktData.vix.price; if(v>=30) vixScore=-0.5; else if(v<=15) vixScore=0.5; }
+  var total = numerScore + structScore + (mktData.priceConf||0) + vixScore;
+  var clamped = Math.max(-4, Math.min(4, total));
+  var color = clamped>=1?"var(--green)":clamped<=-1?"var(--red)":"var(--dim)";
+  var fillEl=document.getElementById("conf-fill"), scoreEl=document.getElementById("conf-score"), verdEl=document.getElementById("conf-verdict");
+  if (fillEl) {
+    var pct=(clamped+4)/8*100, center=50;
+    if (clamped>=0) { fillEl.style.left=center+"%"; fillEl.style.width=(pct-center)+"%"; }
+    else            { fillEl.style.left=pct+"%";    fillEl.style.width=(center-pct)+"%"; }
+    fillEl.style.background=color;
+  }
+  if (scoreEl) { scoreEl.textContent=(clamped>0?"+":"")+clamped.toFixed(1); scoreEl.style.color=color; }
+  if (verdEl) {
+    var vl,vb,vc;
+    if (clamped>=2)       {vl="STRONG BULL";vb="rgba(78,202,139,0.2)"; vc="var(--green)";}
+    else if (clamped>=1)  {vl="BULL";       vb="rgba(78,202,139,0.12)";vc="var(--green)";}
+    else if (clamped<=-2) {vl="STRONG BEAR";vb="rgba(224,92,92,0.2)";  vc="var(--red)";}
+    else if (clamped<=-1) {vl="BEAR";       vb="rgba(224,92,92,0.12)"; vc="var(--red)";}
+    else                  {vl="NEUTRAL";    vb="rgba(122,138,154,0.1)";vc="var(--dim)";}
+    verdEl.textContent=vl; verdEl.style.background=vb; verdEl.style.color=vc;
+  }
+}
+// ── End Market Intel ─────────────────────────────────────────────────────────
+
 </script>
 </body>
 </html>
