@@ -2446,7 +2446,11 @@ function renderLog() {
 //                                   This requires you to run a local server or deploy a backend.
 //                                   Do NOT set to true on GitHub Pages — it will always 404.
 //
-const ENABLE_LIVE_BACKTEST = false;
+// Auto-detect: enable live backtest only when running on localhost (node server.js)
+const ENABLE_LIVE_BACKTEST = (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1'
+);
 
 // TICKER MAP — entity key → symbol for /api/historical endpoint
 const BT_TICKER_MAP = {
