@@ -1,0 +1,10 @@
+{
+  "name": "battlefield-esoteric-trading",
+  "version": "1.0.0",
+  "description": "Numerology-based market prediction app with local backend",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "author": "Ted Phyo",
+  "license": "MIT",
+  "engines": { "node": ">=16.0.0" }
+}
