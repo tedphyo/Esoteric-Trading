@@ -2660,7 +2660,7 @@ async function runBacktest() {
         + '\u2713 Live data \u2014 ' + ticker + ' from /api/historical</span>'
     : '<span style="background:rgba(122,138,154,0.1);color:var(--dim);border:1px solid var(--border);padding:3px 9px;border-radius:3px;font-size:9px;">'
         + 'Seed data (SP500 proxy, Feb\u2013Apr 2026). '
-        + (ENABLE_LIVE_BACKTEST ? 'Live fetch failed.' : 'Live backtest disabled \u2014 set ENABLE_LIVE_BACKTEST=true + deploy backend to enable.')
+        + (ENABLE_LIVE_BACKTEST ? 'Live fetch failed.' : 'Run “node server.js” locally for live data.')
         + '</span>';
 
   var clampNote = clampedByData
