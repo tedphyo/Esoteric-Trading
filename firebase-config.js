@@ -1,6 +1,6 @@
 // Firebase web config is public client configuration, not a secret.
 window.ESOTERIC_FIREBASE_CONFIG = {
-  apiKey: 'AIzaSyBR9ZSSrMOfm8IjXefEQ67W7d-f7Pzm058',
+  apiKey: 'AIzaSyBR9ZSsRMOfm8IjXefEQ67W7d-f7Pzm058',
   authDomain: 'nmpt-983a5.firebaseapp.com',
   projectId: 'nmpt-983a5',
   storageBucket: 'nmpt-983a5.firebasestorage.app',
