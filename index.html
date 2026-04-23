@@ -2893,6 +2893,7 @@ function formatAuthError(error) {
     'auth/weak-password': 'Password is too weak. Use at least 6 characters.',
     'auth/missing-password': 'Enter a password.',
     'auth/network-request-failed': 'Network error. Check your connection and try again.',
+    'permission-denied': 'Firestore denied access. Publish firestore.rules for this Firebase project, then try again.',
   };
   return messages[code] || (error && error.message) || 'Something went wrong. Try again.';
 }
@@ -2988,11 +2989,15 @@ async function authSignUp() {
     var cred = await firebaseAuth.createUserWithEmailAndPassword(email, password);
     authUser = cred.user;
     if (displayName) await cred.user.updateProfile({ displayName: displayName });
-    await saveProfileDoc({
-      display_name: displayName,
-      preferred_asset: currentEntity.symbol || '',
-      preferred_date: currentEntity.date || ''
-    });
+    try {
+      await saveProfileDoc({
+        display_name: displayName,
+        preferred_asset: currentEntity.symbol || '',
+        preferred_date: currentEntity.date || ''
+      });
+    } catch (profileError) {
+      console.warn('[Profile] Initial profile save failed:', profileError.message);
+    }
     setModalMessage('auth-msg', 'Account created.', 'success');
     closeAuthModal();
   } catch (e) {
