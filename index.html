@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>This Week's Battlefield</title>
+<title>Esoteric Trading — This Week's Battlefield</title>
+<meta name="description" content="Numerology-based market prediction tool with backtesting, trading log, and esoteric analysis.">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0a0c0f;
@@ -1217,10 +1220,424 @@
     font-family: "Space Mono", monospace;
     font-size: 10px; color: var(--dim);
   }
+
+  /* ── Auth Bar ── */
+  .auth-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 8px 0 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .auth-status {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+  }
+  .auth-status .auth-email { color: var(--gold2); }
+  .auth-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--dim);
+  }
+  .auth-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .auth-btn.primary { background: var(--gold); border-color: var(--gold); color: #0a0c0f; font-weight: 700; }
+  .auth-btn.primary:hover { opacity: 0.85; }
+  .auth-btn.danger { border-color: rgba(224,92,92,0.4); color: var(--red); }
+  .auth-btn.danger:hover { background: rgba(224,92,92,0.1); }
+
+  /* ── Auth Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    width: 100%;
+    max-width: 400px;
+    margin: 20px;
+    position: relative;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal-close {
+    position: absolute;
+    top: 14px; right: 16px;
+    background: none; border: none;
+    color: var(--dim); font-size: 18px;
+    cursor: pointer; line-height: 1;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-title {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: var(--gold2);
+    margin-bottom: 6px;
+  }
+  .modal-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    margin-bottom: 20px;
+    letter-spacing: 0.05em;
+  }
+  .modal-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px;
+    margin-bottom: 18px;
+  }
+  .modal-tab {
+    flex: 1;
+    padding: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--dim);
+    transition: all 0.15s;
+  }
+  .modal-tab.active { background: var(--gold); color: #0a0c0f; font-weight: 700; }
+  .modal-field-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .modal-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    border-radius: 4px;
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .modal-input:focus { border-color: var(--gold); }
+  .modal-input::placeholder { color: var(--dim); }
+  .modal-submit {
+    width: 100%;
+    background: var(--gold);
+    color: #0a0c0f;
+    border: none;
+    padding: 11px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    margin-top: 4px;
+  }
+  .modal-submit:hover { opacity: 0.85; }
+  .modal-msg {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    text-align: center;
+    margin-top: 10px;
+    min-height: 16px;
+    letter-spacing: 0.05em;
+  }
+  .modal-msg.error { color: var(--red); }
+  .modal-msg.success { color: var(--green); }
+
+  /* ── Search Bar ── */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .search-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 12px 9px 32px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--gold); }
+  .search-input::placeholder { color: var(--dim); font-size: 12px; }
+  .search-icon {
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--dim);
+    font-size: 12px;
+    pointer-events: none;
+  }
+  .search-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    z-index: 500;
+    max-height: 260px;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  .search-dropdown.open { display: block; animation: fadeUp 0.15s ease; }
+  .search-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(30,37,48,0.5);
+    transition: background 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .search-item:last-child { border-bottom: none; }
+  .search-item:hover { background: rgba(201,168,76,0.08); }
+  .search-sym {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold2);
+    min-width: 48px;
+  }
+  .search-name {
+    font-size: 12px;
+    color: var(--text);
+    flex: 1;
+  }
+  .search-type {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .type-etf   { background: rgba(74,158,202,0.15); color: var(--blue); }
+  .type-index { background: rgba(201,168,76,0.12); color: var(--gold2); }
+  .type-stock { background: rgba(78,202,139,0.12); color: var(--green); }
+  .type-crypto{ background: rgba(167,139,250,0.12); color: var(--master2); }
+  .search-date {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    color: var(--dim);
+    flex-shrink: 0;
+  }
+  .search-no-result {
+    padding: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Chart Panel ── */
+  .chart-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 18px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .chart-header:hover { background: rgba(255,255,255,0.02); }
+  .chart-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+  .chart-title::before { content: '◆ '; font-size: 8px; }
+  .chart-toggle {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+  }
+  .chart-body {
+    display: none;
+    padding: 16px;
+  }
+  .chart-body.open { display: block; animation: fadeUp 0.2s ease; }
+  .chart-symbol-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .chart-sym-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .chart-sym-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .chart-sym-btn.active, .chart-sym-btn:hover { background: rgba(201,168,76,0.1); border-color: var(--gold); color: var(--gold2); }
+  #tradingview-widget { border-radius: 6px; overflow: hidden; }
+
+  /* ── Profile Modal ── */
+  .profile-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .profile-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .profile-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    text-transform: uppercase;
+    min-width: 90px;
+    letter-spacing: 0.08em;
+  }
+  .profile-val {
+    font-size: 12px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  /* ── Notes status badge ── */
+  .notes-sync-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+  .notes-sync-badge.cloud { background: rgba(78,202,139,0.12); color: var(--green); }
+  .notes-sync-badge.local { background: rgba(122,138,154,0.1); color: var(--dim); }
 </style>
 </head>
 <body>
 <div class="app">
+  <!-- Auth Bar -->
+  <div class="auth-bar" id="auth-bar">
+    <div class="auth-status" id="auth-status">◆ Guest Mode</div>
+    <button class="auth-btn" id="btn-profile" onclick="openProfileModal()" style="display:none">👤 Profile</button>
+    <button class="auth-btn danger" id="btn-signout" onclick="authSignOut()" style="display:none">Sign Out</button>
+    <button class="auth-btn primary" id="btn-signin" onclick="openAuthModal()">Sign In / Up</button>
+  </div>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeAuthModal()">✕</button>
+      <div class="modal-title">Esoteric Trading</div>
+      <div class="modal-sub">Sign in to sync notes &amp; profile across devices</div>
+      <div class="modal-tabs">
+        <button class="modal-tab active" id="tab-signin" onclick="switchAuthTab('signin')">Sign In</button>
+        <button class="modal-tab" id="tab-signup" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+      <div id="auth-form-signin">
+        <div class="modal-field-label">Email</div>
+        <input class="modal-input" id="auth-email" type="email" placeholder="you@example.com">
+        <div class="modal-field-label">Password</div>
+        <input class="modal-input" id="auth-password" type="password" placeholder="••••••••">
+        <button class="modal-submit" onclick="authSignIn()">Sign In</button>
+      </div>
+      <div id="auth-form-signup" style="display:none">
+        <div class="modal-field-label">Email</div>
+        <input class="modal-input" id="auth-email-up" type="email" placeholder="you@example.com">
+        <div class="modal-field-label">Password</div>
+        <input class="modal-input" id="auth-password-up" type="password" placeholder="Min 8 characters">
+        <div class="modal-field-label">Display Name (optional)</div>
+        <input class="modal-input" id="auth-displayname" type="text" placeholder="Your name">
+        <button class="modal-submit" onclick="authSignUp()">Create Account</button>
+      </div>
+      <div class="modal-msg" id="auth-msg"></div>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeProfileModal()">✕</button>
+      <div class="modal-title">Profile &amp; Workspace</div>
+      <div class="modal-sub" id="profile-email-disp"></div>
+      <div class="profile-section">
+        <div class="profile-row">
+          <div class="profile-lbl">Display Name</div>
+          <input class="modal-input" id="profile-displayname" placeholder="Your name" style="margin-bottom:0">
+        </div>
+        <div class="profile-row">
+          <div class="profile-lbl">Fav Asset</div>
+          <input class="modal-input" id="profile-asset" placeholder="e.g. SPY" style="margin-bottom:0">
+        </div>
+        <div class="profile-row">
+          <div class="profile-lbl">Fav Date</div>
+          <input class="modal-input" id="profile-date" placeholder="MM/DD/YYYY" style="margin-bottom:0">
+        </div>
+        <button class="modal-submit" onclick="saveProfile()" style="margin-top:14px">Save Profile</button>
+        <div class="modal-msg" id="profile-msg"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Page Nav -->
   <div class="page-nav">
     <button class="page-nav-btn active" onclick="switchPage('battlefield')">◆ Battlefield</button>
@@ -1230,9 +1647,15 @@
   <div id="page-battlefield">
 
   <!-- Header -->
-  <div class="header">
+  <div class="header" id="main-header">
     <div class="header-left">
       <div class="entity-label">Entity / Birth Date</div>
+      <!-- Asset Search -->
+      <div class="search-wrap" id="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" id="asset-search" type="text" placeholder="Search assets... (SPY, BTC, AAPL)" oninput="onSearchInput()" onfocus="onSearchFocus()" onblur="onSearchBlur()" autocomplete="off">
+        <div class="search-dropdown" id="search-dropdown"></div>
+      </div>
       <div class="tabs">
         <button class="tab active" onclick="switchTab('preset')">Preset</button>
         <button class="tab" onclick="switchTab('custom')">Custom</button>
@@ -1381,6 +1804,24 @@
     </div>
   </div>
 
+  <!-- TradingView Chart Panel -->
+  <div class="chart-panel" id="chart-panel">
+    <div class="chart-header" onclick="toggleChart()">
+      <div class="chart-title">Chart</div>
+      <div class="chart-toggle" id="chart-toggle">▾ EXPAND</div>
+    </div>
+    <div class="chart-body" id="chart-body">
+      <div class="chart-symbol-bar">
+        <div class="chart-sym-label">Symbol:</div>
+        <button class="chart-sym-btn active" id="cbtn-SPY" onclick="setChartSymbol('SPY')">SPY</button>
+        <button class="chart-sym-btn" id="cbtn-QQQ" onclick="setChartSymbol('QQQ')">QQQ</button>
+        <button class="chart-sym-btn" id="cbtn-BTC" onclick="setChartSymbol('BITSTAMP:BTCUSD')">BTC</button>
+        <button class="chart-sym-btn" id="cbtn-GOLD" onclick="setChartSymbol('TVC:GOLD')">GOLD</button>
+        <button class="chart-sym-btn" id="cbtn-CUSTOM" onclick="setChartSymbol(currentChartSymbol, true)">Custom ▸</button>
+      </div>
+      <div id="tradingview-widget"></div>
+    </div>
+  </div>
 
   <!-- Notes Section -->
   <div class="notes-section" id="notes-section">
@@ -1833,6 +2274,124 @@ const PRESETS = {
 
 let currentMode = 'preset';
 let currentEntity = { name: 'S&P 500 Index', date: '03/04/1957' };
+let chartOpen = false;
+let currentChartSymbol = 'SPY';
+const LIVE_API_BASE = 'https://esoteric-trading-api.tedphyo-esoteric-trading.workers.dev';
+
+function apiUrl(path) {
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return path;
+  return LIVE_API_BASE + path;
+}
+
+const ASSET_SEARCH = [
+  { symbol: 'SPY', name: 'SPDR S&P 500 ETF', type: 'ETF', date: '03/04/1957', preset: 'SP500|03/04/1957', chart: 'SPY' },
+  { symbol: 'SPX', name: 'S&P 500 Index', type: 'INDEX', date: '03/04/1957', preset: 'SP500|03/04/1957', chart: 'SP:SPX' },
+  { symbol: 'QQQ', name: 'Invesco QQQ Trust', type: 'ETF', date: '02/08/1971', preset: 'NASDAQ|02/08/1971', chart: 'QQQ' },
+  { symbol: 'IXIC', name: 'NASDAQ Composite', type: 'INDEX', date: '02/08/1971', preset: 'NASDAQ|02/08/1971', chart: 'NASDAQ:IXIC' },
+  { symbol: 'DIA', name: 'SPDR Dow Jones ETF', type: 'ETF', date: '05/26/1896', preset: 'DOW|05/26/1896', chart: 'DIA' },
+  { symbol: 'DJI', name: 'Dow Jones Industrial Average', type: 'INDEX', date: '05/26/1896', preset: 'DOW|05/26/1896', chart: 'DJ:DJI' },
+  { symbol: 'BTC', name: 'Bitcoin', type: 'CRYPTO', date: '01/03/2009', preset: 'BTC|01/03/2009', chart: 'BITSTAMP:BTCUSD' },
+  { symbol: 'GOLD', name: 'Gold Futures', type: 'FUTURES', date: '01/01/1975', preset: 'GOLD|01/01/1975', chart: 'TVC:GOLD' },
+  { symbol: 'AAPL', name: 'Apple Inc.', type: 'STOCK', date: '04/01/1976', chart: 'NASDAQ:AAPL' },
+  { symbol: 'TSLA', name: 'Tesla Inc.', type: 'STOCK', date: '07/01/2003', chart: 'NASDAQ:TSLA' },
+  { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'STOCK', date: '04/05/1993', chart: 'NASDAQ:NVDA' }
+];
+
+function selectSearchAsset(asset) {
+  if (asset.preset) {
+    currentMode = 'preset';
+    document.getElementById('preset-select').value = asset.preset;
+    applyPreset();
+  } else {
+    currentMode = 'custom';
+    document.getElementById('custom-name').value = asset.name;
+    document.getElementById('custom-date').value = asset.date;
+    currentEntity = { name: asset.name, date: asset.date };
+    renderAll();
+  }
+  document.querySelectorAll('.tab').forEach(function(t, idx) {
+    t.classList.toggle('active', (idx === 0 && currentMode === 'preset') || (idx === 1 && currentMode === 'custom'));
+  });
+  document.getElementById('preset-section').style.display = currentMode === 'preset' ? '' : 'none';
+  document.getElementById('custom-section').classList.toggle('visible', currentMode === 'custom');
+  document.getElementById('asset-search').value = asset.symbol + ' - ' + asset.name;
+  document.getElementById('search-dropdown').classList.remove('open');
+  setChartSymbol(asset.chart || asset.symbol);
+}
+
+function renderSearchResults(query) {
+  const dd = document.getElementById('search-dropdown');
+  if (!dd) return;
+  const q = (query || '').trim().toLowerCase();
+  const matches = ASSET_SEARCH.filter(function(asset) {
+    return !q || asset.symbol.toLowerCase().includes(q) || asset.name.toLowerCase().includes(q) || asset.type.toLowerCase().includes(q);
+  }).slice(0, 8);
+  if (!matches.length) {
+    dd.innerHTML = '<div class="search-no-result">No matching assets yet. Use Custom for anything else.</div>';
+  } else {
+    dd.innerHTML = matches.map(function(asset, idx) {
+      return '<div class="search-item" data-search-idx="' + idx + '">'
+        + '<div><div class="search-sym">' + asset.symbol + '</div><div class="search-name">' + asset.name + '</div></div>'
+        + '<div><div class="search-type">' + asset.type + '</div><div class="search-date">' + asset.date + '</div></div>'
+        + '</div>';
+    }).join('');
+    dd.querySelectorAll('.search-item').forEach(function(item) {
+      item.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        selectSearchAsset(matches[Number(item.dataset.searchIdx)]);
+      });
+    });
+  }
+  dd.classList.add('open');
+}
+
+function onSearchInput() {
+  renderSearchResults(document.getElementById('asset-search').value);
+}
+
+function onSearchFocus() {
+  renderSearchResults(document.getElementById('asset-search').value);
+}
+
+function onSearchBlur() {
+  setTimeout(function() {
+    var dd = document.getElementById('search-dropdown');
+    if (dd) dd.classList.remove('open');
+  }, 150);
+}
+
+function renderChart() {
+  var el = document.getElementById('tradingview-widget');
+  if (!el) return;
+  var symbol = encodeURIComponent(currentChartSymbol || 'SPY');
+  el.innerHTML = '<iframe title="TradingView chart" style="width:100%;height:420px;border:0;" allowtransparency="true" scrolling="no" src="https://s.tradingview.com/widgetembed/?symbol='
+    + symbol + '&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&toolbarbg=111418&studies=[]&theme=dark&style=1&timezone=America%2FChicago"></iframe>';
+}
+
+function toggleChart() {
+  chartOpen = !chartOpen;
+  document.getElementById('chart-body').classList.toggle('open', chartOpen);
+  document.getElementById('chart-toggle').textContent = chartOpen ? '▴ COLLAPSE' : '▾ EXPAND';
+  if (chartOpen) renderChart();
+}
+
+function setChartSymbol(symbol, askCustom) {
+  if (askCustom) {
+    var entered = prompt('TradingView symbol', currentChartSymbol || 'SPY');
+    if (!entered) return;
+    symbol = entered.trim();
+  }
+  currentChartSymbol = symbol || 'SPY';
+  document.querySelectorAll('.chart-sym-btn').forEach(function(btn) { btn.classList.remove('active'); });
+  var known = currentChartSymbol === 'SPY' ? 'cbtn-SPY'
+    : currentChartSymbol === 'QQQ' ? 'cbtn-QQQ'
+    : currentChartSymbol === 'BITSTAMP:BTCUSD' ? 'cbtn-BTC'
+    : currentChartSymbol === 'TVC:GOLD' ? 'cbtn-GOLD'
+    : 'cbtn-CUSTOM';
+  var active = document.getElementById(known);
+  if (active) active.classList.add('active');
+  if (chartOpen) renderChart();
+}
 
 function switchTab(mode) {
   currentMode = mode;
@@ -2203,9 +2762,186 @@ function showDetail(date, ud, entData, univData, pw, pd_data, verdict, entitySco
 
 // ── Notes System ─────────────────────────────────────────────────────
 
+let supabaseClient = null;
+let authSession = null;
+let authReady = false;
+let currentProfile = {};
+
+function isoDateKey(date) {
+  return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+}
+
+async function apiFetch(path, options) {
+  options = options || {};
+  options.headers = options.headers || {};
+  if (authSession && authSession.access_token) {
+    options.headers.Authorization = 'Bearer ' + authSession.access_token;
+  }
+  if (options.body && !options.headers['Content-Type']) {
+    options.headers['Content-Type'] = 'application/json';
+  }
+  var resp = await fetch(apiUrl(path), options);
+  var text = await resp.text();
+  var data = text ? JSON.parse(text) : null;
+  if (!resp.ok) throw new Error((data && data.error) || ('HTTP ' + resp.status));
+  return data;
+}
+
+function setModalMessage(id, msg, cls) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'modal-msg ' + (cls || '');
+}
+
+function updateAuthUI() {
+  var status = document.getElementById('auth-status');
+  var signIn = document.getElementById('btn-signin');
+  var signOut = document.getElementById('btn-signout');
+  var profile = document.getElementById('btn-profile');
+  var email = authSession && authSession.user && authSession.user.email;
+  if (status) status.innerHTML = email ? '◆ Synced as <span class="auth-email">' + email + '</span>' : '◆ Guest Mode';
+  if (signIn) signIn.style.display = email ? 'none' : '';
+  if (signOut) signOut.style.display = email ? '' : 'none';
+  if (profile) profile.style.display = email ? '' : 'none';
+}
+
+async function initAuth() {
+  try {
+    var cfg = await apiFetch('/api/config');
+    if (cfg.authEnabled && window.supabase) {
+      supabaseClient = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+      var sessionResult = await supabaseClient.auth.getSession();
+      authSession = sessionResult && sessionResult.data ? sessionResult.data.session : null;
+      supabaseClient.auth.onAuthStateChange(function(_event, session) {
+        authSession = session;
+        updateAuthUI();
+        if (authSession) loadProfile();
+        if (currentEntity) renderAll();
+      });
+      if (authSession) await loadProfile();
+    }
+  } catch (e) {
+    console.warn('[Auth] Cloud sync unavailable:', e.message);
+  } finally {
+    authReady = true;
+    updateAuthUI();
+  }
+}
+
+function openAuthModal() {
+  setModalMessage('auth-msg', '', '');
+  document.getElementById('auth-modal').classList.add('open');
+}
+
+function closeAuthModal() {
+  document.getElementById('auth-modal').classList.remove('open');
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('auth-form-signin').style.display = tab === 'signin' ? '' : 'none';
+  document.getElementById('auth-form-signup').style.display = tab === 'signup' ? '' : 'none';
+  setModalMessage('auth-msg', '', '');
+}
+
+async function authSignIn() {
+  if (!supabaseClient) return setModalMessage('auth-msg', 'Cloud auth is not configured on this server.', 'error');
+  var email = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value;
+  setModalMessage('auth-msg', 'Signing in...', '');
+  var result = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (result.error) return setModalMessage('auth-msg', result.error.message, 'error');
+  authSession = result.data.session;
+  updateAuthUI();
+  closeAuthModal();
+}
+
+async function authSignUp() {
+  if (!supabaseClient) return setModalMessage('auth-msg', 'Cloud auth is not configured on this server.', 'error');
+  var email = document.getElementById('auth-email-up').value.trim();
+  var password = document.getElementById('auth-password-up').value;
+  var displayName = document.getElementById('auth-displayname').value.trim();
+  setModalMessage('auth-msg', 'Creating account...', '');
+  var result = await supabaseClient.auth.signUp({ email, password, options: { data: { display_name: displayName } } });
+  if (result.error) return setModalMessage('auth-msg', result.error.message, 'error');
+  authSession = result.data.session;
+  updateAuthUI();
+  setModalMessage('auth-msg', authSession ? 'Account created.' : 'Check your email to confirm your account.', 'success');
+  if (authSession && displayName) {
+    currentProfile.display_name = displayName;
+    await saveProfile();
+    closeAuthModal();
+  }
+}
+
+async function authSignOut() {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  authSession = null;
+  updateAuthUI();
+  if (currentEntity) renderAll();
+}
+
+function openProfileModal() {
+  var email = authSession && authSession.user ? authSession.user.email : '';
+  document.getElementById('profile-email-disp').textContent = email;
+  document.getElementById('profile-displayname').value = currentProfile.display_name || '';
+  document.getElementById('profile-asset').value = currentProfile.preferred_asset || '';
+  document.getElementById('profile-date').value = currentProfile.preferred_date || '';
+  setModalMessage('profile-msg', '', '');
+  document.getElementById('profile-modal').classList.add('open');
+}
+
+function closeProfileModal() {
+  document.getElementById('profile-modal').classList.remove('open');
+}
+
+async function loadProfile() {
+  if (!authSession) return;
+  try {
+    currentProfile = await apiFetch('/api/profile') || {};
+  } catch (e) {
+    console.warn('[Profile] Load failed:', e.message);
+  }
+}
+
+async function saveProfile() {
+  if (!authSession) return setModalMessage('profile-msg', 'Sign in first.', 'error');
+  var payload = {
+    display_name: document.getElementById('profile-displayname').value.trim(),
+    preferred_asset: document.getElementById('profile-asset').value.trim(),
+    preferred_date: document.getElementById('profile-date').value.trim()
+  };
+  try {
+    currentProfile = await apiFetch('/api/profile', { method: 'POST', body: JSON.stringify(payload) });
+    setModalMessage('profile-msg', 'Profile saved.', 'success');
+  } catch (e) {
+    setModalMessage('profile-msg', e.message, 'error');
+  }
+}
+
+async function loadCloudNotes(entityName, weekDays) {
+  if (!authSession || !weekDays.length) return {};
+  var qs = '?entity_name=' + encodeURIComponent(entityName) + '&week_start=' + isoDateKey(weekDays[0]);
+  var rows = await apiFetch('/api/notes' + qs);
+  var map = {};
+  rows.forEach(function(row) { map[row.note_date] = row.content || ''; });
+  return map;
+}
+
+async function saveCloudNote(entityName, date, text) {
+  if (!authSession) return;
+  await apiFetch('/api/notes', {
+    method: 'POST',
+    body: JSON.stringify({ entity_name: entityName, note_date: isoDateKey(date), content: text })
+  });
+}
+
+initAuth();
+
 function noteKey(entityName, date) {
-  const d = date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate();
-  return 'note|' + entityName.replace(/[^a-zA-Z0-9]/g,'_') + '|' + d;
+  return 'note|' + entityName.replace(/[^a-zA-Z0-9]/g,'_') + '|' + isoDateKey(date);
 }
 
 function loadNote(entityName, date) {
@@ -2240,6 +2976,7 @@ function renderNotes(entityName, weekDays) {
     ta.placeholder = 'What happened? Price action, confluence notes...';
     ta.value = savedText;
     ta.dataset.date = dateStr;
+    ta.dataset.isoDate = isoDateKey(date);
 
     const savedLbl = document.createElement('div');
     savedLbl.className = 'note-saved-label';
@@ -2250,6 +2987,9 @@ function renderNotes(entityName, weekDays) {
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
         saveNote(entityName, date, ta.value);
+        saveCloudNote(entityName, date, ta.value).catch(function(e) {
+          console.warn('[Notes] Cloud save failed:', e.message);
+        });
         savedLbl.classList.add('show');
         const dot = card.querySelector('.note-saved-dot');
         if (ta.value.trim()) dot.classList.add('visible');
@@ -2262,6 +3002,20 @@ function renderNotes(entityName, weekDays) {
     card.appendChild(ta);
     card.appendChild(savedLbl);
     grid.appendChild(card);
+  });
+
+  loadCloudNotes(entityName, weekDays).then(function(cloudNotes) {
+    Object.keys(cloudNotes).forEach(function(isoDate) {
+      var ta = grid.querySelector('textarea[data-iso-date="' + isoDate + '"]');
+      if (!ta || document.activeElement === ta) return;
+      ta.value = cloudNotes[isoDate];
+      var dot = ta.closest('.note-card').querySelector('.note-saved-dot');
+      if (dot) dot.classList.toggle('visible', Boolean(ta.value.trim()));
+      var parts = isoDate.split('-').map(Number);
+      saveNote(entityName, new Date(parts[0], parts[1]-1, parts[2]), ta.value);
+    });
+  }).catch(function(e) {
+    console.warn('[Notes] Cloud load failed:', e.message);
   });
 }
 
@@ -2446,11 +3200,7 @@ function renderLog() {
 //                                   This requires you to run a local server or deploy a backend.
 //                                   Do NOT set to true on GitHub Pages — it will always 404.
 //
-// Auto-detect: enable live backtest only when running on localhost (node server.js)
-const ENABLE_LIVE_BACKTEST = (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-);
+const ENABLE_LIVE_BACKTEST = true;
 
 // TICKER MAP — entity key → symbol for /api/historical endpoint
 const BT_TICKER_MAP = {
@@ -2490,14 +3240,14 @@ async function fetchHistoricalDailyData(symbol, startDate, endDate) {
   var end = endDate.getFullYear() + '-'
     + String(endDate.getMonth()+1).padStart(2,'0') + '-'
     + String(endDate.getDate()).padStart(2,'0');
-  var endpoint = '/api/historical?symbol=' + symbol + '&start=' + start + '&end=' + end;
+  var endpoint = apiUrl('/api/historical?symbol=' + symbol + '&start=' + start + '&end=' + end);
 
   try {
     var resp = await fetch(endpoint);
     if (!resp.ok) throw new Error('HTTP ' + resp.status + ' from ' + endpoint);
     var json = await resp.json();
-    if (!json || !json.dates) throw new Error('invalid response from ' + endpoint);
-    return json.dates; // already a direction map: { 'YYYY-M-D': 1|-1|0 }
+    if (!Array.isArray(json)) throw new Error('invalid response from ' + endpoint);
+    return json; // return array of candles
   } catch (e) {
     console.warn('[Backtest] /api/historical failed:', e.message);
     return null;
@@ -2545,8 +3295,17 @@ async function runBacktest() {
 
   if (ENABLE_LIVE_BACKTEST) {
     resultsEl.innerHTML = '<div style="padding:16px;font-family:\'Space Mono\',monospace;font-size:11px;color:var(--gold2)">\u23f3 Fetching ' + ticker + ' from /api/historical...</div>';
-    var liveMap = await fetchHistoricalDailyData(ticker, selStart, selEnd);
-    if (liveMap && Object.keys(liveMap).length > 0) {
+    var liveCandles = await fetchHistoricalDailyData(ticker, selStart, selEnd);
+    if (liveCandles && liveCandles.length > 0) {
+      var liveMap = {};
+      for (var i = 1; i < liveCandles.length; i++) {
+        var c = liveCandles[i];
+        var prevClose = liveCandles[i-1].close;
+        var dir = c.close > prevClose ? 1 : (c.close < prevClose ? -1 : 0);
+        var d = new Date(c.date);
+        var key = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+        liveMap[key] = dir;
+      }
       activeHistorical = liveMap;
       dataSource       = 'live';
     } else {
@@ -2657,15 +3416,13 @@ async function runBacktest() {
   // Source badge — honest about what data was used
   var srcBadge = dataSource === 'live'
     ? '<span style="background:rgba(78,202,139,0.15);color:var(--green);border:1px solid rgba(78,202,139,0.3);padding:3px 9px;border-radius:3px;font-size:9px;">'
-        + '\u2713 Live data \u2014 ' + ticker + ' from /api/historical</span>'
+        + '\u2713 Live historical data loaded \u2014 ' + ticker + ' from /api/historical</span>'
     : '<span style="background:rgba(122,138,154,0.1);color:var(--dim);border:1px solid var(--border);padding:3px 9px;border-radius:3px;font-size:9px;">'
-        + 'Seed data (SP500 proxy, Feb\u2013Apr 2026). '
-        + (ENABLE_LIVE_BACKTEST ? 'Live fetch failed.' : 'Run “node server.js” locally for live data.')
-        + '</span>';
+        + 'Using local seed data fallback (SP500 proxy).</span>';
 
-  var clampNote = clampedByData
+  var clampNote = (clampedByData && dataSource === 'seed')
     ? '<div style="margin-bottom:8px;padding:6px 12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:4px;font-family:\'Space Mono\',monospace;font-size:9px;color:var(--gold2);">'
-        + '\u26a0 Seed data ends ' + histEndFmt2 + ' — results shown through that date only. Run node server.js locally for live data.</div>'
+        + '\u26a0 Selected end date exceeds available data. Showing through ' + histEndFmt2 + '.</div>'
     : '';
 
   var noteHtml = '<div style="font-family:\'Space Mono\',monospace;font-size:8px;color:var(--dim);margin-top:4px;">'

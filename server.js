@@ -1,81 +1,222 @@
-/**
- * Battlefield — Local Development Server
- * Run: node server.js  then open http://localhost:3000
- */
-'use strict';
-const http = require('http');
-const https = require('https');
+const express = require('express');
+const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
-const PORT = process.env.PORT || 3000;
 
-function fetchYahooHistorical(symbol, startDate, endDate) {
-  return new Promise((resolve, reject) => {
-    const p1 = Math.floor(new Date(startDate).getTime()/1000) - 86400;
-    const p2 = Math.floor(new Date(endDate).getTime()/1000) + 86400;
-    const yfUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&period1=${p1}&period2=${p2}`;
-    const options = { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } };
-    https.get(yfUrl, options, (res) => {
-      let raw = '';
-      res.on('data', c => raw += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(raw);
-          const r = j?.chart?.result?.[0];
-          if (!r || !r.timestamp) return reject(new Error('no data'));
-          resolve(r);
-        } catch(e) { reject(e); }
-      });
-    }).on('error', reject);
-  });
+function loadEnvFile(filePath) {
+    if (!fs.existsSync(filePath)) return;
+    const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/);
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eq = trimmed.indexOf('=');
+        if (eq === -1) continue;
+        const key = trimmed.slice(0, eq).trim();
+        let value = trimmed.slice(eq + 1).trim();
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+        }
+        if (key && process.env[key] === undefined) process.env[key] = value;
+    }
 }
 
-function buildDirectionMap(result) {
-  const map = {}, ts = result.timestamp, close = result.indicators.quote[0].close;
-  for (let i = 1; i < ts.length; i++) {
-    if (close[i] == null || close[i-1] == null) continue;
-    const d = new Date(ts[i]*1000);
-    const key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-    map[key] = close[i] > close[i-1] ? 1 : close[i] < close[i-1] ? -1 : 0;
-  }
-  return map;
-}
+loadEnvFile(path.join(__dirname, '.env'));
 
-function setCors(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
+// yahoo-finance2 v3: `.default` is the YahooFinance constructor, must use `new`
+const YahooFinance = require('yahoo-finance2').default;
+const yf = new YahooFinance({ suppressNotices: ['ripHistorical'] });
 
-const server = http.createServer(async (req, res) => {
-  const { pathname, query } = url.parse(req.url, true);
-  setCors(res);
-  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
-  if (pathname === '/api/historical' && req.method === 'GET') {
-    const { symbol, start, end } = query;
-    if (!symbol || !start || !end) { res.writeHead(400); return res.end(JSON.stringify({error:'missing params'})); }
-    try {
-      const result = await fetchYahooHistorical(symbol, start, end);
-      const dates = buildDirectionMap(result);
-      const keys = Object.keys(dates).sort();
-      res.writeHead(200, {'Content-Type':'application/json'});
-      res.end(JSON.stringify({symbol, start:keys[0], end:keys[keys.length-1], count:keys.length, source:'yahoo-finance-v8', dates}));
-      console.log(`[API] ${symbol}: ${keys.length} days`);
-    } catch(e) { res.writeHead(502); res.end(JSON.stringify({error:e.message})); }
-    return;
-  }
-  if (req.method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
-    fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
-      if (err) { res.writeHead(404); return res.end('not found'); }
-      res.writeHead(200, {'Content-Type':'text/html;charset=utf-8'}); res.end(data);
-    }); return;
-  }
-  res.writeHead(404); res.end(JSON.stringify({error:'not found'}));
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static(__dirname));
+
+// ── Supabase Admin Client (service role — stays server-side only) ────────────
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    : null;
+
+app.get('/api/config', (req, res) => {
+    res.json({
+        supabaseUrl: SUPABASE_URL,
+        supabaseAnonKey: SUPABASE_ANON_KEY,
+        authEnabled: Boolean(SUPABASE_URL && SUPABASE_ANON_KEY && supabase)
+    });
 });
 
-server.listen(PORT, () => {
-  console.log('\n  ◆ Battlefield server running');
-  console.log(`  → http://localhost:${PORT}`);
-  console.log('  Set ENABLE_LIVE_BACKTEST=true in index.html for live backtest data.\n');
+// ── /api/historical — real daily candles from Yahoo Finance ─────────────────
+app.get('/api/historical', async (req, res) => {
+    try {
+        const { symbol, start, end } = req.query;
+        if (!symbol || !start || !end) {
+            return res.status(400).json({ error: 'Missing symbol, start, or end parameters' });
+        }
+
+        // Pull extra days before start so we can compute direction on the first requested day
+        const startDate = new Date(start);
+        startDate.setDate(startDate.getDate() - 7);
+        const adjustedStart = startDate.toISOString().split('T')[0];
+
+        // Make end inclusive (Yahoo end date is exclusive)
+        const endDate = new Date(end);
+        endDate.setDate(endDate.getDate() + 1);
+        const adjustedEnd = endDate.toISOString().split('T')[0];
+
+        const result = await yf.historical(symbol, {
+            period1: adjustedStart,
+            period2: adjustedEnd,
+            interval: '1d'
+        });
+
+        const normalized = result.map(item => ({
+            date: item.date,
+            open: item.open,
+            high: item.high,
+            low: item.low,
+            close: item.close,
+            volume: item.volume
+        }));
+
+        console.log(`[API] ${symbol} ${start}→${end}: ${normalized.length} rows`);
+        res.json(normalized);
+    } catch (error) {
+        console.error('[Backend] Error fetching historical data:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ── /api/quote — single ticker real-time quote via Yahoo Finance ─────────────
+app.get('/api/quote', async (req, res) => {
+    try {
+        const { symbol } = req.query;
+        if (!symbol) return res.status(400).json({ error: 'Missing symbol' });
+        const quote = await yf.quote(symbol);
+        res.json({
+            symbol: quote.symbol,
+            price: quote.regularMarketPrice,
+            change: quote.regularMarketChange,
+            changePct: quote.regularMarketChangePercent,
+            open: quote.regularMarketOpen,
+            high: quote.regularMarketDayHigh,
+            low: quote.regularMarketDayLow,
+            volume: quote.regularMarketVolume,
+            name: quote.longName || quote.shortName || symbol
+        });
+    } catch (error) {
+        console.error('[API/quote] Error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ── /api/notes — per-user notes (requires Supabase) ─────────────────────────
+// All note routes require Authorization: Bearer <supabase_jwt>
+// We verify the JWT using the Supabase admin client.
+
+async function getUserFromToken(authHeader) {
+    if (!supabase || !authHeader) return null;
+    const token = authHeader.replace('Bearer ', '');
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user) return null;
+    return data.user;
+}
+
+// GET /api/notes?entity_name=...&week_start=YYYY-MM-DD
+app.get('/api/notes', async (req, res) => {
+    const user = await getUserFromToken(req.headers.authorization);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { entity_name, week_start } = req.query;
+    const query = supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', user.id);
+
+    if (entity_name) query.eq('entity_name', entity_name);
+    if (week_start) query.gte('note_date', week_start);
+
+    const { data, error } = await query;
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+});
+
+// POST /api/notes — upsert a single note
+app.post('/api/notes', async (req, res) => {
+    const user = await getUserFromToken(req.headers.authorization);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { entity_name, note_date, content } = req.body;
+    if (!entity_name || !note_date) return res.status(400).json({ error: 'Missing fields' });
+
+    const { data, error } = await supabase
+        .from('notes')
+        .upsert({ user_id: user.id, entity_name, note_date, content, updated_at: new Date().toISOString() },
+                 { onConflict: 'user_id,entity_name,note_date' })
+        .select()
+        .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+});
+
+// DELETE /api/notes — delete a note
+app.delete('/api/notes', async (req, res) => {
+    const user = await getUserFromToken(req.headers.authorization);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { entity_name, note_date } = req.query;
+    const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('entity_name', entity_name)
+        .eq('note_date', note_date);
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ ok: true });
+});
+
+// ── /api/profile — get/set user profile ─────────────────────────────────────
+app.get('/api/profile', async (req, res) => {
+    const user = await getUserFromToken(req.headers.authorization);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+    if (error && error.code !== 'PGRST116') return res.status(500).json({ error: error.message });
+    res.json(data || { user_id: user.id, display_name: '', preferred_asset: '', preferred_date: '' });
+});
+
+app.post('/api/profile', async (req, res) => {
+    const user = await getUserFromToken(req.headers.authorization);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { display_name, preferred_asset, preferred_date } = req.body;
+    const { data, error } = await supabase
+        .from('profiles')
+        .upsert({ user_id: user.id, display_name, preferred_asset, preferred_date, updated_at: new Date().toISOString() },
+                 { onConflict: 'user_id' })
+        .select()
+        .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+});
+
+// ── Start ────────────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+    if (!supabase) {
+        console.warn('[Auth] SUPABASE_URL / SUPABASE_SERVICE_KEY not set — auth routes disabled (notes/profile require Supabase)');
+    } else {
+        console.log('[Auth] Supabase connected');
+    }
 });
