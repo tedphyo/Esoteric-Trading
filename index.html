@@ -2394,15 +2394,19 @@ function entityDayVibration(entityDate, date) {
 // LEARNED UD→DIRECTION SCORING ENGINE  (v3 — 71% backtest accuracy)
 // ══════════════════════════════════════════════════════════════════════
 //
-// Key findings from correlation analysis (Feb–Apr 2026, S&P 500):
+// Key findings from 5-year SPY daily backtest (1,256 days, 2021-05 → 2026-05):
 //
+//  • Baseline: 53.8% bull days
 //  • PY and PW are CONSTANT all year per entity — useless for daily signals
 //  • Only UD and PD change meaningfully day to day
-//  • Traditional number polarity (1=bullish, 4=bearish) is WRONG for markets
-//    in this period — markets often move AGAINST the energy (squeeze → rally)
-//  • UD=3,4,6,11 correlated with UP days for S&P in this dataset
-//  • UD=9,22,33 correlated with DOWN days
-//  • UD=22 is the most reliable VOLATILITY flag (big move either way)
+//  • Traditional number polarity (1=bullish, 4=bearish) is WRONG for markets —
+//    markets often move AGAINST the classical numerological energy
+//  • Strongest bull UD: 5 (60.9%) and 11★ (57.1%)
+//  • Weakest UD: 6 (48.0%), 8 (49.2%), 7 (50.7%) — mild bear lean
+//  • Master 22 UD = 47.4% bull with highest range = VOLATILITY flag
+//  • Strongest bull PD for SPY: PD 1 (60.9%, +7.1 edge)
+//  • Worst PD for SPY: PD 22 (35.7%, -18.1 edge) — master 22 vs SPY's mindplane 22
+//  • PD 2 is the "hidden 11 trap" — 42.6% bull, -11.3 edge
 //
 // Architecture:
 //  1. Compute UD ordinal and compound for the day
@@ -2415,14 +2419,31 @@ function entityDayVibration(entityDate, date) {
 // Users can also log W/L outcomes which will update the map in real time.
 // ══════════════════════════════════════════════════════════════════════
 
-// Learned UD-ordinal → direction map per entity (from Feb–Apr 2026 data)
+// Learned UD-ordinal → direction map per entity
+//
+// SPY values were CALIBRATED from a 5-year SPY daily backtest (1,256 trading
+// days, 2021-05-17 → 2026-05-15) using the same UD formula the site uses.
+// All other entities still use placeholder values until they get their own
+// backtest. Until then, getLiveMap() falls back to the SPY map.
+//
 // Format: { udNumber: { up: count, down: count } }
 // Higher up/down ratio = more bullish that UD number is historically
 const LEARNED_MAPS = {
+  // ── SPY: calibrated from 5-year backtest (baseline 53.8% bull) ──
   'SPY|01/22/1993': {
-    1:{up:2,down:1}, 3:{up:3,down:2}, 4:{up:2,down:1}, 5:{up:2,down:3},
-    6:{up:4,down:1}, 7:{up:3,down:3}, 8:{up:2,down:3}, 9:{up:1,down:3},
-    11:{up:3,down:1}, 22:{up:0,down:2}, 33:{up:0,down:1}, 44:{up:1,down:0}
+    1: {up:76, down:60},   // n=136  55.9% bull   (+2.1 edge)
+    2: {up:19, down:19},   // n=38   50.0%        (-3.8)
+    3: {up:80, down:63},   // n=143  55.9%        (+2.1)
+    4: {up:53, down:46},   // n=99   53.5%        (-0.3)
+    5: {up:84, down:54},   // n=138  60.9% ★      (+7.1)  strongest non-master
+    6: {up:47, down:51},   // n=98   48.0%        (-5.8)
+    7: {up:71, down:69},   // n=140  50.7%        (-3.1)
+    8: {up:58, down:60},   // n=118  49.2%        (-4.6)
+    9: {up:74, down:61},   // n=135  54.8%        (+1.0)
+    11:{up:60, down:45},   // n=105  57.1%        (+3.3)  master
+    22:{up:18, down:20},   // n=38   47.4%        (-6.4)  master — bearish lean, volatile
+    33:{up:22, down:22},   // n=44   50.0%        (-3.8)  master
+    44:{up:14, down:10},   // n=24   58.3%        (+4.5)  master — small sample
   },
   'NASDAQ|02/08/1971': {
     1:{up:2,down:1}, 3:{up:3,down:2}, 4:{up:2,down:1}, 5:{up:2,down:3},
@@ -2499,43 +2520,67 @@ function updateLearnedMap(entityKey, date, outcome) {
 // Core: compute directional confidence from UD number using learned map
 function udConfidence(udFinal, map) {
   const entry = map[udFinal];
-  if (!entry) return { conf: 0, direction: 0, isVolatile: false };
+  if (!entry) return { conf: 0, direction: 0, ratio: 0.5, total: 0, isVolatile: false };
   const total = entry.up + entry.down;
-  if (total === 0) return { conf: 0, direction: 0, isVolatile: false };
+  if (total === 0) return { conf: 0, direction: 0, ratio: 0.5, total: 0, isVolatile: false };
   const ratio = entry.up / total;                   // 0=all down, 1=all up
   const conf  = Math.abs(ratio - 0.5) * 2;          // 0=coin flip, 1=certain
   const direction = ratio > 0.5 ? 1 : -1;
-  // UD=22 always volatile regardless of direction
-  const isVolatile = udFinal === 22 || udFinal === 5;
+  // Master 11 and 22 carry the highest daily ranges in the 5yr backtest.
+  // UD=5 used to be flagged volatile but is actually the strongest non-master
+  // bull day historically, so it's no longer flagged.
+  const isVolatile = udFinal === 22 || udFinal === 11;
   return { conf, direction, ratio, total, isVolatile };
 }
 
-// PD modifier: amplify or dampen confidence based on PD number
-function pdModifier(pdFinal) {
-  // PD=3,6,9 = expansion amplifier
-  if ([3,6,9].includes(pdFinal)) return 1.2;
-  // PD=4,8 = restriction amplifier (contrarian)
-  if ([4,8].includes(pdFinal)) return 1.15;
-  // PD=11,22,33,44 = master amplifier
-  if ([11,22,33,44].includes(pdFinal)) return 1.3;
-  return 1.0;
+// PD directional bias — calibrated from 5-year SPY entity backtest
+// Each value is the signed edge vs baseline (53.8% bull), expressed as
+// a probability shift. Positive = bull tilt, negative = bear tilt.
+// Bias is ADDED to the UD-derived bull probability before the verdict
+// is computed, so PD can flip the call even when UD points the other way.
+const PD_BIAS = {
+  1:  { bias: +0.071, n: 138 },   // 60.9% bull — strongest day
+  2:  { bias: -0.112, n: 47  },   // 42.6% — hidden-11 trap day
+  3:  { bias: -0.031, n: 140 },
+  4:  { bias: +0.032, n: 100 },
+  5:  { bias: +0.010, n: 135 },
+  6:  { bias: +0.018, n: 99  },
+  7:  { bias: +0.014, n: 143 },
+  8:  { bias: +0.018, n: 142 },
+  9:  { bias: -0.020, n: 137 },
+  11: { bias: -0.022, n: 95  },   // master 11 — neutral
+  22: { bias: -0.181, n: 42  },   // master 22 — WORST. Resonance overload vs SPY's mindplane
+  33: { bias: +0.030, n: 37  },   // master 33 harmony
+  44: { bias:  0.000, n: 1   },   // n=1 — neutralized until more data
+};
+
+function pdBias(pdFinal) {
+  const entry = PD_BIAS[pdFinal];
+  return entry ? entry.bias : 0;
 }
 
+// Verdict: blend UD historical bull probability with PD directional bias.
+// p = UD_bull_ratio + PD_bias  (clipped to [0, 1])
+// Distance from 0.5 determines confidence; sign determines direction.
 function getLearnedVerdict(entityKey, entData, univData) {
   const map = getLiveMap(entityKey);
   const udFinal = univData.ud.ordinal.final;
-  const { conf, direction, isVolatile } = udConfidence(udFinal, map);
+  const { ratio: udRatio, total, isVolatile } = udConfidence(udFinal, map);
+  if (!total) return 'NEUTRAL';
 
-  // PD from entity data
-  const pdMod = entData ? pdModifier(entData.pd.final) : 1.0;
-  const adjustedConf = conf * pdMod;
+  const bias = entData ? pdBias(entData.pd.final) : 0;
+  const p    = Math.max(0, Math.min(1, udRatio + bias));   // combined bull probability
+  const conf = Math.abs(p - 0.5) * 2;                       // 0=coinflip, 1=certain
+  const direction = p > 0.5 ? 1 : -1;
 
-  // Confidence thresholds
-  if (isVolatile && adjustedConf < 0.3) return 'VOLATILE';
-  if (adjustedConf >= 0.5 && direction === 1)  return 'STRONG RALLY';
-  if (adjustedConf >= 0.25 && direction === 1)  return 'RALLY';
-  if (adjustedConf >= 0.5 && direction === -1)  return 'CRASH';
-  if (adjustedConf >= 0.25 && direction === -1) return 'BEAR';
+  // Master 22 (UD or PD) flags structural volatility regardless of direction
+  const masterVol = isVolatile || entData?.pd.final === 22 || entData?.pd.final === 11;
+
+  if (masterVol && conf < 0.20) return 'VOLATILE';
+  if (conf >= 0.30 && direction ===  1) return 'STRONG RALLY';
+  if (conf >= 0.10 && direction ===  1) return 'RALLY';
+  if (conf >= 0.30 && direction === -1) return 'CRASH';
+  if (conf >= 0.10 && direction === -1) return 'BEAR';
   return 'NEUTRAL';
 }
 
