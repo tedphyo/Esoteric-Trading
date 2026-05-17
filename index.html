@@ -1978,7 +1978,11 @@
       <button class="page-nav-btn" onclick="btSwitch('mp')">Mindplane</button>
       <button class="page-nav-btn" onclick="btSwitch('rlp')">Reduced Lifepath</button>
       <button class="page-nav-btn" onclick="btSwitch('clp')">Compound Lifepath</button>
+      <button class="page-nav-btn" onclick="btSwitch('entity')">★ SPY Personal Day</button>
     </div>
+
+    <!-- Today's SPY reading (entity tab only) -->
+    <div id="bt-today" style="display:none;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:24px"></div>
 
     <!-- Legend -->
     <div style="display:flex;gap:18px;font-size:11px;color:var(--dim);margin-bottom:16px;flex-wrap:wrap;font-family:'Space Mono',monospace;letter-spacing:.04em">
@@ -2063,27 +2067,53 @@ function btMoveCell(v) {
   return `<td class="num ${cls}">${v>=0?'+':''}${v.toFixed(3)}%</td>`;
 }
 
+let btEntity = null;
+
 async function btLoad() {
-  if (btData) return btData;
+  if (btData && btEntity) return;
   try {
-    const r = await fetch('numerology-market-backtest.json');
-    btData = await r.json();
+    if (!btData) {
+      const r = await fetch('numerology-market-backtest.json');
+      btData = await r.json();
+    }
+    if (!btEntity) {
+      const e = await fetch('numerology-entity-backtest.json');
+      btEntity = await e.json();
+    }
     document.getElementById('bt-meta').textContent =
       `${btData.total_days} trading days · ${btData.date_range[0]} → ${btData.date_range[1]} · SPY daily · baseline ${btData.baseline_bull_pct}% bull`;
-    return btData;
-  } catch (e) {
+  } catch (err) {
     document.getElementById('bt-meta').textContent = 'Failed to load backtest data.';
-    return null;
   }
+}
+
+function btMasterStop(n) {
+  while (n > 9 && !BT_MASTER.has(n)) n = btDigitSum(n);
+  return n;
+}
+function btEntityToday() {
+  if (!btEntity) return null;
+  const [ey, em, ed] = btEntity.entity_dob.split('-').map(Number);
+  const now = new Date();
+  const y = now.getFullYear(), mo = now.getMonth()+1, d = now.getDate();
+  const uy = btMasterStop(String(y).split('').reduce((a,c)=>a+Number(c),0));
+  const py = btMasterStop(em + ed + uy);
+  const pm = btMasterStop(py + mo);
+  const pd = btMasterStop(pm + d);
+  return { uy, py, pm, pd, today: `${mo}/${d}/${y}` };
 }
 
 function btSwitch(tab) {
   btTab = tab;
   document.querySelectorAll('#page-backtest .page-nav-btn').forEach((b, i) => {
     b.classList.toggle('active',
-      (i===0 && tab==='days') || (i===1 && tab==='mp') ||
-      (i===2 && tab==='rlp')  || (i===3 && tab==='clp'));
+      (i===0 && tab==='days')   || (i===1 && tab==='mp') ||
+      (i===2 && tab==='rlp')    || (i===3 && tab==='clp') ||
+      (i===4 && tab==='entity'));
   });
+  // Show/hide today reading
+  const today = document.getElementById('bt-today');
+  today.style.display = tab === 'entity' ? 'grid' : 'none';
   btRender();
 }
 
@@ -2152,6 +2182,58 @@ function btRender() {
         ${btMoveCell(r.avg_move)}
         <td class="num">${r.avg_range.toFixed(3)}%</td>
         <td class="num">${r.trend_pct}%</td></tr>`;
+    });
+  } else if (btTab === 'entity') {
+    if (!btEntity) { document.getElementById('bt-meta').textContent = 'Entity data unavailable'; return; }
+    const ebaseline = btEntity.baseline_bull_pct;
+    const t = btEntityToday();
+
+    // Today's reading
+    const today = document.getElementById('bt-today');
+    const pdStat = btEntity.personal_day[t.pd];
+    const pdBull = pdStat ? pdStat.bull_pct.toFixed(1) : '–';
+    const pdEdge = pdStat ? (pdStat.bull_pct - ebaseline).toFixed(1) : '';
+    const cardClass = (k) => BT_MASTER.has(k) ? 'master' : (btHiddenMaster(k) ? 'hidden' : 'plain');
+    const tagText = (k) => BT_MASTER.has(k) ? '★ Master' : (btHiddenMaster(k) ? `Hidden ${btHiddenMaster(k)}` : 'Plain');
+    const cardCss = (c) => `border:1px solid ${c==='master'?'rgba(201,168,76,.4)':c==='hidden'?'rgba(167,139,250,.4)':'var(--border)'};border-radius:8px;background:var(--surface);padding:14px`;
+    const valColor = (c) => c==='master'?'var(--gold)':c==='hidden'?'#a78bfa':'var(--text)';
+    today.innerHTML = `
+      <div style="${cardCss('plain')}">
+        <div style="font-size:10px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase">Today · SPY</div>
+        <div style="font-size:16px;color:var(--dim);margin-top:4px">${t.today}</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:6px;font-family:'Space Mono',monospace">DOB ${btEntity.entity_dob} · LP ${btEntity.entity_lifepath}</div>
+      </div>
+      <div style="${cardCss(cardClass(t.py))}">
+        <div style="font-size:10px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase">Personal Year</div>
+        <div style="font-size:28px;font-weight:800;color:${valColor(cardClass(t.py))};margin-top:4px">${t.py}</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:2px">${tagText(t.py)}</div>
+      </div>
+      <div style="${cardCss(cardClass(t.pm))}">
+        <div style="font-size:10px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase">Personal Month</div>
+        <div style="font-size:28px;font-weight:800;color:${valColor(cardClass(t.pm))};margin-top:4px">${t.pm}</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:2px">${tagText(t.pm)}</div>
+      </div>
+      <div style="${cardCss(cardClass(t.pd))}">
+        <div style="font-size:10px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase">Personal Day</div>
+        <div style="font-size:28px;font-weight:800;color:${valColor(cardClass(t.pd))};margin-top:4px">${t.pd}</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:2px">${pdBull}% bull · ${pdEdge>=0?'+':''}${pdEdge} vs base</div>
+      </div>`;
+
+    // Personal Day table (the main one)
+    thead.innerHTML = `<tr><th>Personal Day</th><th>Type</th><th class="num">Days</th><th>Bull %</th><th class="num">Avg Move</th><th class="num">Avg Range</th><th class="num">Avg Abs</th></tr>`;
+    tbody.innerHTML = '';
+    Object.entries(btEntity.personal_day).sort((a,b)=>+a[0]-+b[0]).forEach(([k,r]) => {
+      const pd = +k;
+      const lbl = BT_MASTER.has(pd) ? `PD ${pd} ★` : `PD ${pd}`;
+      const highlight = pd === t.pd ? `background:rgba(201,168,76,.08)` : '';
+      tbody.innerHTML += `<tr style="${highlight}">
+        <td><strong>${lbl}</strong></td>
+        <td>${btTagBadge(pd)}</td>
+        <td class="num">${r.n}</td>
+        <td>${btBullBar(r.bull_pct, ebaseline)}</td>
+        ${btMoveCell(r.avg_move)}
+        <td class="num">${r.avg_range.toFixed(3)}%</td>
+        <td class="num">${r.avg_abs.toFixed(3)}%</td></tr>`;
     });
   }
 }
