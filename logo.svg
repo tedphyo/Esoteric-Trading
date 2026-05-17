@@ -1,0 +1,8 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="40" height="40" fill="#0A0A0A"/>
+    <path d="M20 3L3 12V28L20 37L37 28V12L20 3Z" fill="#1A1A1A" stroke="#FFD700" stroke-width="2"/>
+    <path d="M20 10L10 16V24L20 30L30 24V16L20 10Z" fill="#333333" stroke="#FFA500" stroke-width="1.5"/>
+    <path d="M17 18L15 22H19L20 20L21 22H25L23 18L20 13L17 18Z" fill="#FFD700"/>
+    <path d="M20 23L18 26H22L20 23Z" fill="#FFA500"/>
+    <text x="14" y="27" font-family="Arial" font-size="8" fill="#FFFFFF" font-weight="bold">IE</text>
+</svg>
