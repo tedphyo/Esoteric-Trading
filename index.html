@@ -1721,7 +1721,7 @@
 
       <div id="preset-section">
         <select class="preset-select" id="preset-select" onchange="applyPreset()">
-          <option value="SP500|03/04/1957">S&P 500 Index — 03/04/1957</option>
+          <option value="SPY|01/22/1993">SPY — SPDR S&P 500 ETF — 01/22/1993</option>
           <option value="NASDAQ|02/08/1971">NASDAQ — 02/08/1971</option>
           <option value="DOW|05/26/1896">Dow Jones — 05/26/1896</option>
           <option value="NYSE|05/17/1792">NYSE — 05/17/1792</option>
@@ -1736,8 +1736,8 @@
       </div>
 
       <div class="entity-info">
-        <div class="entity-name-display" id="entity-name-disp">S&P 500 Index</div>
-        <div class="entity-date-display" id="entity-date-disp">03/04/1957</div>
+        <div class="entity-name-display" id="entity-name-disp">SPDR S&P 500 ETF</div>
+        <div class="entity-date-display" id="entity-date-disp">01/22/1993</div>
         <div class="entity-meta-display" id="entity-meta-disp"></div>
       </div>
     </div>
@@ -1925,7 +1925,7 @@
           <button class="log-month-btn" onclick="logShiftMonth(1)">›</button>
         </div>
         <select class="backtest-entity-sel" id="log-entity-sel" onchange="renderLog()">
-          <option value="SP500|03/04/1957">S&P 500</option>
+          <option value="SPY|01/22/1993">SPY</option>
           <option value="NASDAQ|02/08/1971">NASDAQ</option>
           <option value="DOW|05/26/1896">Dow Jones</option>
           <option value="BTC|01/03/2009">Bitcoin</option>
@@ -1944,7 +1944,7 @@
     <div class="backtest-header">
       <div class="backtest-title">Backtest Range</div>
       <select class="backtest-entity-sel" id="bt-entity-sel">
-        <option value="SP500|03/04/1957">S&P 500</option>
+        <option value="SPY|01/22/1993">SPY</option>
         <option value="NASDAQ|02/08/1971">NASDAQ</option>
         <option value="DOW|05/26/1896">Dow Jones</option>
         <option value="BTC|01/03/2009">Bitcoin</option>
@@ -2419,7 +2419,7 @@ function entityDayVibration(entityDate, date) {
 // Format: { udNumber: { up: count, down: count } }
 // Higher up/down ratio = more bullish that UD number is historically
 const LEARNED_MAPS = {
-  'SP500|03/04/1957': {
+  'SPY|01/22/1993': {
     1:{up:2,down:1}, 3:{up:3,down:2}, 4:{up:2,down:1}, 5:{up:2,down:3},
     6:{up:4,down:1}, 7:{up:3,down:3}, 8:{up:2,down:3}, 9:{up:1,down:3},
     11:{up:3,down:1}, 22:{up:0,down:2}, 33:{up:0,down:1}, 44:{up:1,down:0}
@@ -2453,7 +2453,7 @@ const LEARNED_MAPS = {
 
 // Get the live map key for current entity (merges base + user logged outcomes)
 function getLiveMap(entityKey) {
-  const base = LEARNED_MAPS[entityKey] || LEARNED_MAPS['SP500|03/04/1957'];
+  const base = LEARNED_MAPS[entityKey] || LEARNED_MAPS['SPY|01/22/1993'];
   // Load any user-logged outcomes from localStorage and fold them in
   try {
     const overrides = JSON.parse(localStorage.getItem('udmap|' + entityKey) || '{}');
@@ -2604,7 +2604,7 @@ function getVerdict(entityScore, univScore, entityData, univData, entityKey) {
 // ── Presets ──────────────────────────────────────────────────────────
 
 const PRESETS = {
-  'SP500|03/04/1957': { symbol: 'SPY', name: 'S&P 500 Index', date: '03/04/1957', exchange: 'NYSE Arca', type: 'ETF', foundedLabel: 'Mar 4, 1957', foundedPrecision: 'day', chart: 'SPY' },
+  'SPY|01/22/1993': { symbol: 'SPY', name: 'SPDR S&P 500 ETF', date: '01/22/1993', exchange: 'NYSE Arca', type: 'ETF', foundedLabel: 'Jan 22, 1993', foundedPrecision: 'day', chart: 'SPY' },
   'NASDAQ|02/08/1971': { symbol: 'QQQ', name: 'NASDAQ', date: '02/08/1971', exchange: 'NASDAQ', type: 'Index', foundedLabel: 'Feb 8, 1971', foundedPrecision: 'day', chart: 'QQQ' },
   'DOW|05/26/1896': { symbol: 'DIA', name: 'Dow Jones', date: '05/26/1896', exchange: 'NYSE Arca', type: 'ETF', foundedLabel: 'May 26, 1896', foundedPrecision: 'day', chart: 'DIA' },
   'NYSE|05/17/1792': { symbol: 'NYSE', name: 'NYSE', date: '05/17/1792', exchange: 'NYSE', type: 'Exchange', foundedLabel: 'May 17, 1792', foundedPrecision: 'day', chart: 'NYSE:NYA' },
@@ -2613,7 +2613,7 @@ const PRESETS = {
 };
 
 let currentMode = 'preset';
-let currentEntity = { ...PRESETS['SP500|03/04/1957'] };
+let currentEntity = { ...PRESETS['SPY|01/22/1993'] };
 let chartOpen = false;
 let currentChartSymbol = 'SPY';
 const LIVE_API_BASE = 'https://esoteric-trading-api.tedphyo-esoteric-trading.workers.dev';
@@ -2984,7 +2984,7 @@ function renderAll() {
     const univScore   = univData.score;
     // Build entity key for learned map lookup
     const presetEntry = Object.entries(PRESETS).find(([k,v]) => v.date === currentEntity.date);
-    const entityKey   = presetEntry ? presetEntry[0] : 'SP500|03/04/1957';
+    const entityKey   = presetEntry ? presetEntry[0] : 'SPY|01/22/1993';
     const verdict     = entData ? getVerdict(entityScore, univScore, entData, univData, entityKey) : 'NEUTRAL';
 
     const entLbl  = scoreLabel(entityScore);
@@ -3529,7 +3529,7 @@ function getPrediction(entityDate, date, entityKey) {
   const entData = computeEntityScore(entityDate, date);
   const univData = computeUniversalScore(date);
   if (!entData) return 'NEUTRAL';
-  return getVerdict(entData.score, univData.score, entData, univData, entityKey || 'SP500|03/04/1957');
+  return getVerdict(entData.score, univData.score, entData, univData, entityKey || 'SPY|01/22/1993');
 }
 
 function renderLog() {
@@ -3665,7 +3665,7 @@ const ENABLE_LIVE_BACKTEST = true;
 
 // TICKER MAP — entity key → symbol for /api/historical endpoint
 const BT_TICKER_MAP = {
-  'SP500|03/04/1957':  'SPY',
+  'SPY|01/22/1993':  'SPY',
   'NASDAQ|02/08/1971': 'QQQ',
   'DOW|05/26/1896':    'DIA',
   'NYSE|05/17/1792':   'SPY',
@@ -4320,7 +4320,7 @@ function calcConfluence() {
   var entityDate = parseDate(currentEntity.date);
   if (entityDate) {
     var presetEntry = Object.entries(PRESETS).find(function(e){ return e[1].date===currentEntity.date; });
-    var eKey = presetEntry ? presetEntry[0] : "SP500|03/04/1957";
+    var eKey = presetEntry ? presetEntry[0] : "SPY|01/22/1993";
     var entData  = computeEntityScore(entityDate, new Date());
     var univData = computeUniversalScore(new Date());
     if (entData) {
