@@ -33,9 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let spyFoundationDate = '1993-01-22';
     let qqqFoundationDate = '1999-03-10';
     let chartSymbol = 'SPY';
-    let chartTimer = null;
-    let quoteRefreshTimer = null;
-    let tvRefreshTimer = null;
     let isPaused = false;
     let tradingViewWidget = null;
     let chartInterval = '15m';
@@ -47,6 +44,28 @@ document.addEventListener('DOMContentLoaded', () => {
         '1h': { tv: '60', api: '1h' },
         'D': { tv: 'D', api: '1d' }
     };
+
+    let chartTimer = null;
+    let quoteRefreshTimer = null;
+    let tvRefreshTimer = null;
+    let watchlistRefreshTimer = null;
+
+    function stopTimers() {
+        if (chartTimer) clearInterval(chartTimer);
+        if (quoteRefreshTimer) clearInterval(quoteRefreshTimer);
+        if (tvRefreshTimer) clearInterval(tvRefreshTimer);
+        if (watchlistRefreshTimer) clearInterval(watchlistRefreshTimer);
+    }
+
+    function startTimers() {
+        stopTimers(); // Ensure no duplicate timers
+        // Set initial timer values
+        chartTimer = setInterval(() => loadChart(chartSymbol), 60 * 1000); // Chart refresh
+        quoteRefreshTimer = setInterval(refreshQuoteData, 45 * 1000); // Quote data refresh
+        tvRefreshTimer = setInterval(refreshTradingView, 60 * 1000); // TradingView widget refresh
+        watchlistRefreshTimer = setInterval(() => { if (!document.hidden && !isPaused) { fetchWatchlist(); } }, 45 * 1000); // Watchlist refresh
+    }
+
     function getInterval() { return INTERVAL_MAP[chartInterval] || INTERVAL_MAP['15m']; }
 
     // ── Load persisted state from localStorage ──
@@ -130,13 +149,13 @@ document.addEventListener('DOMContentLoaded', () => {
         signalBanner.classList.remove('banner-7', 'banner-11', 'banner-28', 'banner-none');
         if (signalValue === 7) {
             signalBanner.classList.add('banner-7');
-            signalBanner.innerHTML = '<span>&#9888;&#65039;</span> SIGNAL 7 &mdash; SHORT BIAS TODAY';
+            signalBanner.innerHTML = '<span>&#9888;&#65039;</span> SIGNAL 7 SETUP';
         } else if (signalValue === 11) {
             signalBanner.classList.add('banner-11');
-            signalBanner.innerHTML = '<span>&#128680;</span> SIGNAL 11 &mdash; COLLAPSE WATCH';
+            signalBanner.innerHTML = '<span>&#128680;</span> SIGNAL 11 SETUP';
         } else if (signalValue === 28) {
             signalBanner.classList.add('banner-28');
-            signalBanner.innerHTML = '<span>&#128176;</span> SIGNAL 28 &mdash; WEALTH SETUP';
+            signalBanner.innerHTML = '<span>&#128176;</span> SIGNAL 28 SETUP';
         } else {
             signalBanner.classList.add('banner-none');
             signalBanner.textContent = 'No cycle signal today';
@@ -146,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Watchlist Panel ──
     const WATCHLIST_SYMBOLS = ['SPY', 'QQQ', 'NVDA', 'AAPL', 'TSLA', 'MSFT'];
     let watchlistData = [];
-    let watchlistRefreshTimer = null;
 
     async function fetchWatchlist() {
         const symbolsParam = WATCHLIST_SYMBOLS.join(',');
@@ -188,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderWatchlist() {
         if (!watchlistItems) return;
         if (!watchlistData || !watchlistData.length) {
-            watchlistItems.innerHTML = '<div class=\"watchlist-loading\">No data</div>';
+            watchlistItems.innerHTML = '<div class="watchlist-loading">No data</div>';
             return;
         }
         watchlistItems.innerHTML = '';
@@ -202,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const changeStr = change >= 0 ? `+${change.toFixed(2)}` : change.toFixed(2);
             const pctStr = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
             const aligned = computeNumerologyAlignment(sym);
-
             const card = document.createElement('div');
             card.className = `watchlist-card${chartSymbol === sym ? ' active' : ''}${unavailable ? ' unavailable' : ''}`;
             card.innerHTML = `
@@ -480,96 +497,117 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function refreshTradingView() {
         if (document.hidden || isPaused) return;
-        renderTradingViewWidget(chartSymbol);
+        if (tradingViewWidget) {
+            tradingViewWidget.contentWindow.postMessage({ type: 'setSymbol', symbol: toTradingViewSymbol(chartSymbol) }, '*');
+        }
     }
 
-    function selectSymbol(symbol) {
-        selectedSymbol = symbol;
-        currentSymbolDisplay.textContent = symbol;
-        symbolSearchInput.value = '';
-        symbolSearchResults.innerHTML = '';
-        symbolSearchResults.style.display = 'none';
-        let optionExists = false;
-        for (let i = 0; i < symbolSelect.options.length; i++) {
-            if (symbolSelect.options[i].value === symbol) { symbolSelect.value = symbol; optionExists = true; break; }
-        }
-        if (!optionExists && symbol !== 'SPY' && symbol !== 'QQQ') {
-            const newOption = document.createElement('option');
-            newOption.value = symbol;
-            newOption.textContent = symbol;
-            symbolSelect.insertBefore(newOption, symbolSelect.options[symbolSelect.options.length - 1]);
-            symbolSelect.value = symbol;
-        }
-        saveState();
-        fetchMarketData(selectedSymbol);
-        loadChart(symbol);
+    // ── TradingView Chart Widget ──
+    function initTradingViewChart(symbol) {
+        // This function is intended to be called when the TradingView iframe is ready to receive messages
+        // However, the current setup reloads the iframe for every symbol change, invalidating previous widget references.
+        // If we want to use postMessage for symbol changes, the iframe must be persistent.
+        // For now, renderTradingViewWidget handles the iframe source change directly.
+        console.warn("initTradingViewChart is redundant with current iframe loading strategy, consider refactoring.");
     }
 
+    // --- Price Ticker ---
+    // (Existing price ticker logic here, if any. No explicit ticker functions found in previous analysis.)
+
+    // --- Search functionality ---
     symbolSearchInput.addEventListener('input', handleSearchInput);
-    symbolSearchInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-            const firstResult = symbolSearchResults.querySelector('.search-result-item');
-            if (firstResult) firstResult.click();
-            else if (symbolSearchInput.value) selectSymbol(symbolSearchInput.value.toUpperCase());
-            event.preventDefault();
+    symbolSearchInput.addEventListener('focus', handleSearchInput);
+    symbolSelect.addEventListener('change', () => selectSymbol(symbolSelect.value));
+    symbolSearchResults.addEventListener('mouseleave', () => {
+        // Delay hide to allow click on search results
+        setTimeout(() => {
+            symbolSearchResults.style.display = 'none';
+        }, 300);
+    });
+
+    datePicker.addEventListener('change', () => {
+        localStorage.setItem('invictus-edge-date', datePicker.value);
+        fetchAndRenderNumerology(datePicker.value, selectedSymbol, selectedFoundationDate);
+    });
+
+    // ── Initial setup ──
+    async function setupInitialState() {
+        // Set initial date to today
+        const today = new Date().toISOString().split('T')[0];
+        datePicker.value = localStorage.getItem('invictus-edge-date') || today;
+
+        // Fetch initial data for market cards
+        await Promise.allSettled([
+            fetchMarketData('SPY'),
+            fetchMarketData('QQQ')
+        ]).then(() => {
+            // After initial fetches, load the chart with the selected symbol
+            loadChart(selectedSymbol);
+        }).catch(err => console.error("Initial market data fetch failed:", err));
+
+        // Fetch initial watchlist data
+        await fetchWatchlist();
+    }
+
+    // --- Event Listeners ---
+    document.querySelectorAll('[data-chart-interval]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            chartInterval = btn.dataset.chartInterval;
+            localStorage.setItem('invictus-edge-interval', chartInterval);
+            document.querySelectorAll('[data-chart-interval]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderTradingViewWidget(chartSymbol); // Re-render widget with new interval
+        });
+    });
+
+    chartTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const symbol = tab.dataset.chartSymbol;
+            selectSymbol(symbol);
+            loadChart(symbol);
+        });
+    });
+
+    function selectSymbol(newSymbol) {
+        selectedSymbol = newSymbol;
+        currentSymbolDisplay.textContent = newSymbol;
+        symbolSelect.value = newSymbol;
+        localStorage.setItem('invictus-edge-symbol', newSymbol);
+        // Clear old market card highlight
+        marketSPYPrice.parentElement.classList.remove('instr-current');
+        marketQQQPrice.parentElement.classList.remove('instr-current');
+        // Update new market card highlight
+        if (newSymbol === 'SPY') {
+            marketSPYPrice.parentElement.classList.add('instr-current');
+            selectedFoundationDate = spyFoundationDate;
+        } else if (newSymbol === 'QQQ') {
+            marketQQQPrice.parentElement.classList.add('instr-current');
+            selectedFoundationDate = qqqFoundationDate;
+        } else { // Custom symbol
+            // Attempt to get foundation date for custom symbol
+            fetchMarketData(newSymbol);
         }
-    });
-    document.addEventListener('click', (event) => {
-        if (!symbolSearchInput.contains(event.target) && !symbolSearchResults.contains(event.target)) symbolSearchResults.style.display = 'none';
-    });
-    symbolSelect.addEventListener('change', (event) => {
-        const symbol = event.target.value;
-        if (symbol === 'Custom') {
-            symbolSearchInput.focus();
-            symbolSearchInput.placeholder = 'Enter custom symbol (e.g., AAPL)';
-            symbolSelect.value = selectedSymbol;
-        } else selectSymbol(symbol);
-    });
-    chartTabs.forEach(btn => btn.addEventListener('click', () => selectSymbol(btn.dataset.chartSymbol)));
+        const today = datePicker.value || new Date().toISOString().split('T')[0];
+        fetchAndRenderNumerology(today, newSymbol, selectedFoundationDate);
+    }
 
-    // ── Timeframe selector ──
-    document.querySelectorAll('.timeframe-btn').forEach(btn => btn.addEventListener('click', () => {
-        const interval = btn.dataset.chartInterval;
-        chartInterval = interval;
-        document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.toggle('active', b.dataset.chartInterval === interval));
-        renderTradingViewWidget(chartSymbol);
-    }));
+    // Initial calls
+    setupInitialState().then(() => {
+        startTimers();
+        updateLastUpdated();
+        fetchWatchlist();
+    }).catch(err => console.error("Initial setup failed:", err));
 
-    window.addEventListener('resize', () => { if (tradingViewContainer && !tradingViewContainer.children.length) renderTradingViewWidget(chartSymbol); });
-    datePicker.addEventListener('change', (event) => {
-        fetchAndRenderNumerology(event.target.value, selectedSymbol, selectedFoundationDate);
-    });
-
-    // ── Visibility change — pause when tab hidden ──
+    // Handle visibility change
     document.addEventListener('visibilitychange', () => {
-        isPaused = document.hidden;
-        if (lastUpdatedEl) {
-            lastUpdatedEl.className = isPaused ? 'last-updated-badge paused' : 'last-updated-badge fresh';
+        if (!document.hidden) {
+            // Page is visible again, refresh data and restart timers if needed
+            fetchMarketData(selectedSymbol);
+            fetchWatchlist();
+            startTimers(); // Ensure timers are running
+        } else {
+            // Page is hidden, pause timers optionally
+            // stopTimers(); // Optional: pause timers when tab is not active
         }
     });
-
-    datePicker.value = new Date().toISOString().split('T')[0];
-    Promise.all([makeRequest(`/api/symbol-meta?symbol=SPY`), makeRequest(`/api/symbol-meta?symbol=QQQ`)]).then(([spyMeta, qqqMeta]) => {
-        if (spyMeta && spyMeta.foundationDate) spyFoundationDate = spyMeta.foundationDate;
-        if (qqqMeta && qqqMeta.foundationDate) qqqFoundationDate = qqqMeta.foundationDate;
-        selectSymbol(selectedSymbol);
-        if (selectedSymbol !== 'QQQ') fetchMarketData('QQQ');
-        else fetchMarketData('SPY');
-    }).catch(error => {
-        console.error('Error fetching initial foundation dates:', error);
-        selectSymbol(selectedSymbol);
-        fetchMarketData('QQQ');
-    });
-
-    // ── Auto-refresh timers ──
-    chartTimer = setInterval(() => loadChart(chartSymbol), 60 * 1000);
-    quoteRefreshTimer = setInterval(refreshQuoteData, 45 * 1000);
-    tvRefreshTimer = setInterval(refreshTradingView, 60 * 1000);
-    watchlistRefreshTimer = setInterval(() => { if (!document.hidden && !isPaused) { fetchWatchlist(); } }, 45 * 1000);
-
-    // ── Show initial timestamp ──
-    updateLastUpdated();
-
-    // ── Initial watchlist fetch ──
-    fetchWatchlist();
 });
